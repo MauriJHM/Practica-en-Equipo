@@ -44,3 +44,30 @@ for df_name, df in dfs.items():
 all_data_with_filename = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files with added column:")
 st.dataframe(all_data_with_filename)
+
+# prompt: Elimina las columnas SD, ST, BD, BT, AD, AT, BLD, BLT, Vel. Max., Cred. Adu, Cred. Est, Cred. Disc, Cred. Gral
+
+columns_to_drop = [
+    'SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.',
+    'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral'
+]
+
+for df_name, df in dfs.items():
+  # Check if columns exist before dropping
+  cols_to_drop_existing = [col for col in columns_to_drop if col in df.columns]
+  if cols_to_drop_existing:
+    dfs[df_name] = df.drop(columns=cols_to_drop_existing)
+    st.write(f"Dropped columns {cols_to_drop_existing} from {df_name}")
+  else:
+    st.write(f"None of the specified columns to drop were found in {df_name}")
+
+
+# Display the dataframes after dropping columns
+for df_name, df in dfs.items():
+  st.write(f"Contents of {df_name}.xlsx after dropping columns:")
+  st.dataframe(df)
+
+# Re-concatenate the dataframes after dropping columns
+all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after dropping columns:")
+st.dataframe(all_data_after_drop)
