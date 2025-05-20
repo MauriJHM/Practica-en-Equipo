@@ -45,22 +45,17 @@ all_data = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files:")
 st.dataframe(all_data)
 
-# prompt: elimina los valores 0
+# prompt: elimina las columnas SD ST BD BT AD AT BLD BLT Vel. Max. Cred. Adu Cred. Est Cred. Disc Cred. Gral
 
-# Eliminate rows where the value in a specific column is 0
-# Assuming you want to remove rows where a column named 'ColumnName' has a value of 0
-# Replace 'ColumnName' with the actual name of the column you want to check
-column_to_check = 'CONSUMO (Lts.)' # Replace with the actual column name
+# Columns to drop
+columns_to_drop = ['SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.', 'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral']
 
-# Filter out rows where the specified column has a value of 0 for each dataframe
+# Drop the specified columns from each DataFrame in the dictionary
 for df_name, df in dfs.items():
-    if column_to_check in df.columns:
-        dfs[df_name] = df[df[column_to_check] != 0]
-        st.write(f"Removed rows with 0 in '{column_to_check}' from {df_name}")
-    else:
-        st.warning(f"Column '{column_to_check}' not found in {df_name}")
+    dfs[df_name] = df.drop(columns=columns_to_drop, errors='ignore')
+    st.write(f"Dropped specified columns from {df_name}")
 
-# Re-concatenate the dataframes after removing zeros
-all_data_no_zeros = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data after removing rows with 0 in 'CONSUMO (Lts.)':")
-st.dataframe(all_data_no_zeros)
+# Recreate the concatenated DataFrame with the modified DataFrames
+all_data = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data after dropping columns:")
+st.dataframe(all_data)
