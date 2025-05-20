@@ -77,3 +77,12 @@ all_data_after_drop['Hora'] = all_data_after_drop['Hora'].astype(str).str.replac
 # Display the updated dataframe
 st.write("Combined Data after removing letters from 'Hora' column:")
 st.dataframe(all_data_after_drop)
+
+# prompt: convierte la columna Hora a datetime
+
+# Convert the 'Hora' column to datetime objects
+all_data_after_drop['Hora'] = pd.to_datetime(all_data_after_drop['Hora'], format='%H:%M:%S').dt.time
+
+# Display the updated dataframe
+st.write("Combined Data after converting 'Hora' to datetime objects:")
+st.dataframe(all_data_after_drop)
