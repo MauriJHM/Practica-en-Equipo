@@ -68,16 +68,20 @@ all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
 
-# prompt: convierte la columna Hora a datetime
+# prompt: en la columna hora, elimina el pm y am y transformalo a datetime
 
+# Iterate through each dataframe in the dictionary
 for df_name, df in dfs.items():
+  # Check if the 'Hora' column exists
   if 'Hora' in df.columns:
-    dfs[df_name]['Hora'] = pd.to_datetime(dfs[df_name]['Hora'], errors='coerce').dt.time
-    st.write(f"Converted 'Hora' column to datetime.time in {df_name}")
+    # Remove 'AM' and 'PM' and convert to datetime
+    # Using errors='coerce' will turn invalid parsing into NaT (Not a Time)
+    dfs[df_name]['Hora'] = pd.to_datetime(df['Hora'].astype(str).str.replace('[AP]M', '', regex=True).str.strip(), format='%I:%M:%S', errors='coerce')
+    st.write(f"Converted 'Hora' column to datetime in {df_name}")
   else:
     st.write(f"'Hora' column not found in {df_name}")
 
-# Re-concatenate the dataframes after converting 'Hora'
-all_data_after_hora_convert = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files after converting 'Hora':")
-st.dataframe(all_data_after_hora_convert)
+# Re-concatenate the dataframes after the 'Hora' transformation
+all_data_after_hora = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after 'Hora' transformation:")
+st.dataframe(all_data_after_hora)
