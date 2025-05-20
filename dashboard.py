@@ -157,22 +157,40 @@ all_data_after_drop = pd.merge(all_data_after_drop, average_end_times_df, on='No
 st.write("Combined Data with 'Final de Ruta Promedio' column:")
 st.dataframe(all_data_after_drop)
 
-# prompt: Usando la columna de inicio de ruta promedio y final de ruta promedio haz una grafica de lineas 
+# prompt: Usando la columna de inicio de ruta promedio y final de ruta promedio haz una grafica lineal
 
 import plotly.express as px
 
-# Convert time strings to datetime objects for plotting
-average_times_for_plot = average_start_times_df.merge(average_end_times_df, on='Nombre Archivo')
-average_times_for_plot['Inicio de Ruta Promedio Datetime'] = pd.to_datetime(average_times_for_plot['Inicio de Ruta Promedio'])
-average_times_for_plot['Final de Ruta Promedio Datetime'] = pd.to_datetime(average_times_for_plot['Final de Ruta Promedio'])
+# Create a DataFrame with the average start and end times for each truck
+average_times_for_plot = all_data_after_drop[['Nombre Archivo', 'Inicio de Ruta Promedio', 'Final de Ruta Promedio']].drop_duplicates()
 
-# Plotting
-fig = px.line(average_times_for_plot,
+# Convert the time strings back to datetime objects for plotting
+# We can use a dummy date since we are only interested in the time component for comparison
+average_times_for_plot['Inicio de Ruta Promedio_dt'] = pd.to_datetime(average_times_for_plot['Inicio de Ruta Promedio'], format='%H:%M:%S')
+average_times_for_plot['Final de Ruta Promedio_dt'] = pd.to_datetime(average_times_for_plot['Final de Ruta Promedio'], format='%H:%M:%S')
+
+# Melt the DataFrame to long format for Plotly Express
+average_times_melted = average_times_for_plot.melt(
+    id_vars=['Nombre Archivo'],
+    value_vars=['Inicio de Ruta Promedio_dt', 'Final de Ruta Promedio_dt'],
+    var_name='Tipo de Tiempo',
+    value_name='Tiempo Promedio'
+)
+
+# Create the line plot
+fig = px.line(average_times_melted,
               x='Nombre Archivo',
-              y=['Inicio de Ruta Promedio Datetime', 'Final de Ruta Promedio Datetime'],
-              title='Inicio y Final de Ruta Promedio por Camión')
+              y='Tiempo Promedio',
+              color='Tipo de Tiempo',
+              markers=True,
+              title='Inicio y Fin de Ruta Promedio por Camión')
 
-# Format the y-axis to show time
-fig.update_layout(yaxis=dict(tickformat='%H:%M:%S'))
+# Update layout for better readability
+fig.update_layout(
+    xaxis_title='Camión',
+    yaxis_title='Tiempo Promedio',
+    legend_title='Tipo de Tiempo'
+)
 
+# Display the plot
 st.plotly_chart(fig)
