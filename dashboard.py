@@ -40,3 +40,34 @@ for file_path in file_paths:
 # df_m02 = dataframes['CAMION M02']
 # ...
 
+ prompt: elimina las columnas que poseen 0s
+
+# Create a new dictionary to store dataframes with columns containing zeros removed
+dataframes_cleaned = {}
+
+# Iterate through the loaded dataframes
+for name, df in dataframes.items():
+  # Identify columns that contain at least one zero
+  cols_with_zeros = (df == 0).any()
+  # Get the names of the columns to keep (those that do NOT have any zeros)
+  cols_to_keep = cols_with_zeros[~cols_with_zeros].index
+  # Create a new dataframe with only the columns to keep
+  df_cleaned = df[cols_to_keep]
+  # Store the cleaned dataframe in the new dictionary
+  dataframes_cleaned[name] = df_cleaned
+  print(f"Cleaned dataframe '{name}'. Removed {len(df.columns) - len(df_cleaned.columns)} columns with zeros.")
+
+# Now you can access the cleaned dataframes from dataframes_cleaned
+
+ prompt: muestrame el excel
+
+# To display the contents of the first cleaned dataframe, for example:
+if dataframes_cleaned:
+  first_df_name = list(dataframes_cleaned.keys())[0]
+  print(f"\nDisplaying the first cleaned dataframe: {first_df_name}")
+  print(dataframes_cleaned[first_df_name].head()) # Display the first few rows
+else:
+  print("No dataframes were successfully cleaned and loaded.")
+
+# You can display any other cleaned dataframe by changing the key:
+# print(dataframes_cleaned['CAMION M02'].head())
