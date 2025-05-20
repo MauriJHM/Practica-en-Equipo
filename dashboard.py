@@ -1,40 +1,41 @@
+# prompt: lee los archivos /content/CAMION M01.xlsx , /content/CAMION M02.xlsx , /content/CAMION M03.xlsx , /content/CAMION M04.xlsx , /content/CAMION M05.xlsx , /content/CAMION M05.xlsx , /content/CAMION M06.xlsx , /content/CAMION M07.xlsx , /content/CAMION M08.xlsx , /content/CAMION M09.xlsx /content/CAMION M10.xlsx /content/CAMION M11.xlsx , /content/CAMION M12.xlsx y mezcla sus dataframes para exponer en streamlit
 
-import streamlit as st
+
+import plotly.express as px
 import pandas as pd
-
-# prompt: lee los archivos /content/CAMION M01.xlsx , /content/CAMION M02.xlsx , /content/CAMION M03.xlsx , /content/CAMION M04.xlsx , /content/CAMION M05.xlsx , /content/CAMION M05.xlsx , /content/CAMION M06.xlsx , /content/CAMION M07.xlsx , /content/CAMION M08.xlsx , /content/CAMION M09.xlsx /content/CAMION M10.xlsx /content/CAMION M11.xlsx , /content/CAMION M12.xlsx
+import streamlit as st
 
 file_paths = [
-    '/content/CAMION M01.xlsx',
-    '/content/CAMION M02.xlsx',
-    '/content/CAMION M03.xlsx',
-    '/content/CAMION M04.xlsx',
-    '/content/CAMION M05.xlsx',
-    '/content/CAMION M06.xlsx',
-    '/content/CAMION M07.xlsx',
-    '/content/CAMION M08.xlsx',
-    '/content/CAMION M09.xlsx',
-    '/content/CAMION M10.xlsx',
-    '/content/CAMION M11.xlsx',
-    '/content/CAMION M12.xlsx',
+    '/content/CAMION M01.xlsx', '/content/CAMION M02.xlsx', '/content/CAMION M03.xlsx',
+    '/content/CAMION M04.xlsx', '/content/CAMION M05.xlsx', '/content/CAMION M06.xlsx',
+    '/content/CAMION M07.xlsx', '/content/CAMION M08.xlsx', '/content/CAMION M09.xlsx',
+    '/content/CAMION M10.xlsx', '/content/CAMION M11.xlsx', '/content/CAMION M12.xlsx'
 ]
 
-dataframes = {}
+all_data = pd.DataFrame()
 
 for file_path in file_paths:
     try:
         df = pd.read_excel(file_path)
-        # You can store the dataframe in a dictionary using the filename as the key
-        file_name = file_path.split('/')[-1].split('.')[0]
-        dataframes[file_name] = df
-        print(f"Successfully read: {file_path}")
+        all_data = pd.concat([all_data, df], ignore_index=True)
     except FileNotFoundError:
-        print(f"Error: File not found at {file_path}")
+        st.error(f"Error: El archivo no se encuentra - {file_path}")
     except Exception as e:
-        print(f"Error reading {file_path}: {e}")
+        st.error(f"Error al leer el archivo {file_path}: {e}")
 
-# Now you can access each dataframe by its filename, for example:
-# df_m01 = dataframes['CAMION M01']
-# df_m02 = dataframes['CAMION M02']
-# ...
+st.title('Datos Combinados de Camiones')
 
+if not all_data.empty:
+    st.write("Mostrando las primeras 5 filas de los datos combinados:")
+    st.dataframe(all_data.head())
+
+    st.write("Estadísticas descriptivas de los datos combinados:")
+    st.dataframe(all_data.describe())
+
+    st.write("Dimensiones de los datos combinados:")
+    st.write(f"Filas: {all_data.shape[0]}, Columnas: {all_data.shape[1]}")
+
+    # You can add more visualizations or analysis here using Streamlit components
+
+else:
+    st.warning("No se pudo cargar datos de ningún archivo.")
