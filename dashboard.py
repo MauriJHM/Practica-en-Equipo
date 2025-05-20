@@ -44,3 +44,23 @@ if 'CAMION M01' in dfs:
 all_data = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files:")
 st.dataframe(all_data)
+
+# prompt: elimina los valores 0
+
+# Eliminate rows where the value in a specific column is 0
+# Assuming you want to remove rows where a column named 'ColumnName' has a value of 0
+# Replace 'ColumnName' with the actual name of the column you want to check
+column_to_check = 'CONSUMO (Lts.)' # Replace with the actual column name
+
+# Filter out rows where the specified column has a value of 0 for each dataframe
+for df_name, df in dfs.items():
+    if column_to_check in df.columns:
+        dfs[df_name] = df[df[column_to_check] != 0]
+        st.write(f"Removed rows with 0 in '{column_to_check}' from {df_name}")
+    else:
+        st.warning(f"Column '{column_to_check}' not found in {df_name}")
+
+# Re-concatenate the dataframes after removing zeros
+all_data_no_zeros = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data after removing rows with 0 in 'CONSUMO (Lts.)':")
+st.dataframe(all_data_no_zeros)
