@@ -156,3 +156,47 @@ all_data_after_drop = pd.merge(all_data_after_drop, average_end_times_df, on='No
 # Display the dataframe with the new 'Final de Ruta Promedio' column
 st.write("Combined Data with 'Final de Ruta Promedio' column:")
 st.dataframe(all_data_after_drop)
+
+# prompt: Usando la columna de inicio de ruta promedio y final de ruta promedio haz una grafica por camion por cada dia
+
+import plotly.express as px
+
+# Ensure 'Inicio de Ruta Promedio' and 'Final de Ruta Promedio' are in datetime format for plotting
+# We'll need to convert the string representation back to datetime, assuming a dummy date.
+# A common approach is to use a fixed date like the start of an epoch or the current day.
+# For simplicity in plotting time of day, we can use a fixed date like '2000-01-01'.
+all_data_after_drop['Inicio de Ruta Promedio_dt'] = pd.to_datetime('2000-01-01 ' + all_data_after_drop['Inicio de Ruta Promedio'])
+all_data_after_drop['Final de Ruta Promedio_dt'] = pd.to_datetime('2000-01-01 ' + all_data_after_drop['Final de Ruta Promedio'])
+
+# Group by truck and date to get the daily average start and end times
+daily_avg_times = all_data_after_drop.groupby(['Nombre Archivo', 'Fecha']).agg(
+    {'Inicio de Ruta Promedio_dt': 'first',
+     'Final de Ruta Promedio_dt': 'first'}
+).reset_index()
+
+# Create a list of trucks to iterate through
+truck_names = daily_avg_times['Nombre Archivo'].unique()
+
+# Create a plot for each truck
+for truck in truck_names:
+    truck_data = daily_avg_times[daily_avg_times['Nombre Archivo'] == truck]
+
+    # Create a scatter plot
+    fig = px.scatter(
+        truck_data,
+        x='Fecha',
+        y=['Inicio de Ruta Promedio_dt', 'Final de Ruta Promedio_dt'],
+        title=f'Inicio y Final de Ruta Promedio Diario para {truck}',
+        labels={'Fecha': 'Fecha', 'value': 'Hora Promedio'},
+        color_discrete_map={
+            'Inicio de Ruta Promedio_dt': 'blue',
+            'Final de Ruta Promedio_dt': 'red'
+        }
+    )
+
+    # Customize the y-axis to display time format
+    fig.update_yaxes(tickformat='%H:%M')
+
+    # Show the plot using st.plotly_chart
+    st.plotly_chart(fig)
+
