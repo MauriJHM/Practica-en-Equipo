@@ -59,7 +59,7 @@ for name, df in dataframes.items():
 
 # Now you can access the cleaned dataframes from dataframes_cleaned
 
- prompt: muestrame el excel
+#prompt: muestrame el excel
 
 # To display the contents of the first cleaned dataframe, for example:
 if dataframes_cleaned:
