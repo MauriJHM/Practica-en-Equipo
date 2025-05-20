@@ -68,22 +68,16 @@ all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
 
-# prompt: Elimina el pm y am de la columna Hora
+# prompt: Elimina solo las letras "am" y "pm" de la columna Hora
 
-for df_name, df in dfs.items():
-  if 'Hora' in df.columns:
-    # Convert the 'Hora' column to string type
-    dfs[df_name]['Hora'] = dfs[df_name]['Hora'].astype(str)
-    # Remove ' AM' and ' PM' from the 'Hora' column
-    dfs[df_name]['Hora'] = dfs[df_name]['Hora'].str.replace(' AM', '', regex=False).str.replace(' PM', '', regex=False)
-    st.write(f"Removed AM/PM from 'Hora' column in {df_name}")
-  else:
-    st.write(f"'Hora' column not found in {df_name}")
-
-# Display the dataframes after modifying the 'Hora' column
-for df_name, df in dfs.items():
-  st.write(f"Contents of {df_name}.xlsx after modifying 'Hora' column:")
-  st.dataframe(df)
+# Assuming 'all_data_after_drop' is the dataframe you want to modify
+# Make sure the 'Hora' column exists before trying to modify it
+if 'Hora' in all_data_after_drop.columns:
+  all_data_after_drop['Hora'] = all_data_after_drop['Hora'].astype(str).str.replace('am', '').str.replace('pm', '')
+  st.write("Modified 'Hora' column in combined data:")
+  st.dataframe(all_data_after_drop)
+else:
+  st.warning("Column 'Hora' not found in the combined dataframe.")
 
 # Re-concatenate the dataframes after modifying the 'Hora' column
 all_data_after_hora_modification = pd.concat(dfs.values(), ignore_index=True)
