@@ -39,27 +39,17 @@ if 'CAMION M01' in dfs:
     st.write("Contents of CAMION M01.xlsx:")
     st.dataframe(dfs['CAMION M01'])
 
-# prompt: elimina las columnas que contengan los valores 0
+# prompt: elimina la columna SD
 
-# Function to drop columns with any zero values
-def drop_columns_with_zeros(df):
-  # Select columns where no value is zero
-  columns_to_keep = df.columns[(df != 0).all()]
-  return df[columns_to_keep]
+# Eliminar la columna 'SD' si existe en cada DataFrame
+for df_name, df in dfs.items():
+  if 'SD' in df.columns:
+    dfs[df_name] = df.drop(columns=['SD'])
+    st.write(f"Columna 'SD' eliminada de {df_name}")
+  else:
+    st.write(f"Columna 'SD' no encontrada en {df_name}")
 
-# Assuming 'all_data' is your combined DataFrame as created in the preceding code
-if 'all_data' in locals() and isinstance(all_data, pd.DataFrame):
-  # Apply the function to the combined DataFrame
-  all_data_cleaned = drop_columns_with_zeros(all_data)
-
-  st.write("Combined Data after dropping columns with zeros:")
-  st.dataframe(all_data_cleaned)
-
-# If you want to apply this to individual dataframes before concatenating:
-# for df_name, df in dfs.items():
-#   dfs[df_name] = drop_columns_with_zeros(df)
-
-# Then concatenate the cleaned individual dataframes
-# all_data_cleaned_individual = pd.concat(dfs.values(), ignore_index=True)
-# st.write("Combined Data from cleaned individual files:")
-# st.dataframe(all_data_cleaned_individual)
+# Regenerar el DataFrame combinado después de eliminar la columna
+all_data = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data after dropping 'SD' column:")
+st.dataframe(all_data)
