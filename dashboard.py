@@ -78,61 +78,45 @@ all_data_after_drop['Hora'] = all_data_after_drop['Hora'].astype(str).str.replac
 st.write("Combined Data after removing letters from 'Hora' column:")
 st.dataframe(all_data_after_drop)
 
-# prompt: Agrega al final la columna "Promedio Inicio de Ruta" y despues usando la columna hora, saca el promedio de cada hora inicial del dia 
+# prompt: Agrega al final la columna "Promedio Inicio de Ruta" y despues usando la columna hora, saca el promedio de cada hora inicial del dia transformado la columna Horas a segundos
 
-# Add "Promedio Inicio de Ruta" column
-all_data_after_drop["Promedio Inicio de Ruta"] = ""
+# Add the "Promedio Inicio de Ruta" column
+all_data_after_drop['Promedio Inicio de Ruta'] = ''
 
-# Ensure 'Hora' is in a suitable format (like datetime or just seconds since midnight)
-# For averaging, converting to seconds since midnight might be easiest.
-# Assuming 'Hora' is now a string in HH:MM:SS format after removing letters.
+# Function to convert HH:MM:SS to seconds
 def time_to_seconds(time_str):
-  if pd.isna(time_str) or time_str == '':
-    return 0
-    
+    if pd.isna(time_str):
+        return 0
+    try:
+        # Handle potential variations in time format by splitting
+        parts = str(time_str).split(':')
+        if len(parts) == 3:
+            h, m, s = map(int, parts)
+            return h * 3600 + m * 60 + s
+        elif len(parts) == 2:
+             h, m = map(int, parts)
+             return h * 3600 + m * 60
+        else:
+             return 0 # Return 0 for unexpected formats
+    except ValueError:
+        return 0 # Return 0 for values that cannot be converted to int
 
-
+# Convert 'Hora' column to seconds
 all_data_after_drop['Hora_seconds'] = all_data_after_drop['Hora'].apply(time_to_seconds)
 
-# Calculate the average 'Hora_seconds' for each day (assuming 'Fecha' column exists and is date)
-# If 'Fecha' is not a date, you'll need to adjust this grouping.
-if 'Fecha' in all_data_after_drop.columns:
-    # Ensure 'Fecha' is datetime
-    all_data_after_drop['Fecha'] = pd.to_datetime(all_data_after_drop['Fecha'], errors='coerce')
+# Calculate the average of the 'Hora_seconds' column
+average_seconds = all_data_after_drop['Hora_seconds'].mean()
 
-    # Group by 'Fecha' and calculate the mean of 'Hora_seconds'
-    average_start_time_seconds_per_day = all_data_after_drop.groupby(all_data_after_drop['Fecha'].dt.date)['Hora_seconds'].mean()
+# Function to convert seconds back to HH:MM:SS format
+def seconds_to_time(seconds):
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    return f'{h:02d}:{m:02d}:{s:02d}'
 
-    # Map the average seconds back to the original DataFrame based on the date
-    # Create a dictionary for easier mapping
-    avg_time_dict = average_start_time_seconds_per_day.to_dict()
+# Assign the average time (converted back to HH:MM:SS) to the new column
+all_data_after_drop['Promedio Inicio de Ruta'] = seconds_to_time(average_seconds)
 
-    # Function to convert seconds back to HH:MM:SS format
-    def seconds_to_time_string(seconds):
-        if pd.isna(seconds):
-            return ''
-        hours, remainder = divmod(int(seconds), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        return f'{hours:02}:{minutes:02}:{seconds:02}'
-
-    # Apply the average time to the new column based on the date
-    all_data_after_drop['Promedio Inicio de Ruta'] = all_data_after_drop['Fecha'].dt.date.map(avg_time_dict).apply(seconds_to_time_string)
-
-    # Display the dataframe with the average start time per day
-    st.write("Combined Data with 'Promedio Inicio de Ruta' calculated per day:")
-    st.dataframe(all_data_after_drop)
-else:
-    st.warning("'Fecha' column not found. Cannot calculate average start time per day.")
-    # If no 'Fecha' column, perhaps calculate the average of all start times across all data?
-    average_start_time_seconds_overall = all_data_after_drop['Hora_seconds'].mean()
-    average_start_time_overall_string = seconds_to_time_string(average_start_time_seconds_overall)
-    all_data_after_drop['Promedio Inicio de Ruta'] = average_start_time_overall_string
-    st.write("Combined Data with 'Promedio Inicio de Ruta' calculated as overall average:")
-    st.dataframe(all_data_after_drop)
-
-# Drop the temporary 'Hora_seconds' column
-all_data_after_drop = all_data_after_drop.drop(columns=['Hora_seconds'])
-
-# Display the final dataframe
-st.write("Final Combined Data:")
+# Display the dataframe with the new column and the calculated average
+st.write("Combined Data with 'Promedio Inicio de Ruta' and calculated average:")
 st.dataframe(all_data_after_drop)
