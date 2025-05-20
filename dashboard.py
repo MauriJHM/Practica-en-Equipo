@@ -45,9 +45,6 @@ if 'CAMION M01' in dfs:
 
 columns_to_drop = ['SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.', 'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral']
 
-# Drop the specified columns from the concatenated dataframe
-all_data = all_data.drop(columns=columns_to_drop, errors='ignore') # Use errors='ignore' to avoid errors if a column is not found
-
 st.write("Combined Data after dropping columns:")
 st.dataframe(all_data)
 
