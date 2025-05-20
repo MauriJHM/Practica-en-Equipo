@@ -68,7 +68,7 @@ all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
 
- prompt: Elimina las letras de la Columna Hora y deja solo los numeros 
+#prompt: Elimina las letras de la Columna Hora y deja solo los numeros 
 
 for df_name, df in dfs.items():
   if 'Hora' in df.columns:
