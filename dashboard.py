@@ -34,26 +34,3 @@ for file_path in file_paths:
         st.error(f"Error loading {file_path}: {e}")
 
 # Now you can access the dataframes using the dictionary 'dfs'
-# For example, to display the first dataframe:
-if 'CAMION M01' in dfs:
-    st.write("Contents of CAMION M01.xlsx:")
-    st.dataframe(dfs['CAMION M01'])
-
-# prompt: elimina la columna SD
-
-# prompt: elimina la columna SD, ST, BD, BT, AD, AT, BLD, BLT, Vel. Max., Cred. Adu, Cred. Est, Cred. Disc, Cred. Gral
-
-columns_to_drop = ['SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.', 'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral']
-
-st.write("Combined Data after dropping columns:")
-
-
-# Optionally, drop the columns from each individual dataframe in the dictionary
-for df_name, df in dfs.items():
-    dfs[df_name] = df.drop(columns=columns_to_drop, errors='ignore')
-
-st.write("Updated individual dataframes:")
-# Example of displaying one of the updated dataframes
-if 'CAMION M01' in dfs:
-    st.write("Contents of CAMION M01.xlsx after dropping columns:")
-    st.dataframe(dfs['CAMION M01'])
