@@ -41,15 +41,22 @@ if 'CAMION M01' in dfs:
 
 # prompt: elimina la columna SD
 
-# Eliminar la columna 'SD' si existe en cada DataFrame
-for df_name, df in dfs.items():
-  if 'SD' in df.columns:
-    dfs[df_name] = df.drop(columns=['SD'])
-    st.write(f"Columna 'SD' eliminada de {df_name}")
-  else:
-    st.write(f"Columna 'SD' no encontrada en {df_name}")
+# prompt: elimina la columna SD, ST, BD, BT, AD, AT, BLD, BLT, Vel. Max., Cred. Adu, Cred. Est, Cred. Disc, Cred. Gral
 
-# Regenerar el DataFrame combinado después de eliminar la columna
-all_data = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data after dropping 'SD' column:")
+columns_to_drop = ['SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.', 'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral']
+
+# Drop the specified columns from the concatenated dataframe
+all_data = all_data.drop(columns=columns_to_drop, errors='ignore') # Use errors='ignore' to avoid errors if a column is not found
+
+st.write("Combined Data after dropping columns:")
 st.dataframe(all_data)
+
+# Optionally, drop the columns from each individual dataframe in the dictionary
+for df_name, df in dfs.items():
+    dfs[df_name] = df.drop(columns=columns_to_drop, errors='ignore')
+
+st.write("Updated individual dataframes:")
+# Example of displaying one of the updated dataframes
+if 'CAMION M01' in dfs:
+    st.write("Contents of CAMION M01.xlsx after dropping columns:")
+    st.dataframe(dfs['CAMION M01'])
