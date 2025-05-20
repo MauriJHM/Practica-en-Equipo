@@ -68,22 +68,24 @@ all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
 
-# prompt: transforma la columna Hora a datetime
+# prompt: Elimina el pm y am de la columna Hora
 
-# Transform the 'Hora' column to datetime for each dataframe
 for df_name, df in dfs.items():
   if 'Hora' in df.columns:
-    dfs[df_name]['Hora'] = pd.to_datetime(df['Hora'], errors='coerce').dt.time
-    st.write(f"Transformed 'Hora' column to time object in {df_name}")
+    # Convert the 'Hora' column to string type
+    dfs[df_name]['Hora'] = dfs[df_name]['Hora'].astype(str)
+    # Remove ' AM' and ' PM' from the 'Hora' column
+    dfs[df_name]['Hora'] = dfs[df_name]['Hora'].str.replace(' AM', '', regex=False).str.replace(' PM', '', regex=False)
+    st.write(f"Removed AM/PM from 'Hora' column in {df_name}")
   else:
     st.write(f"'Hora' column not found in {df_name}")
 
-# Display the dataframes after transforming 'Hora'
+# Display the dataframes after modifying the 'Hora' column
 for df_name, df in dfs.items():
-  st.write(f"Contents of {df_name}.xlsx after transforming 'Hora':")
+  st.write(f"Contents of {df_name}.xlsx after modifying 'Hora' column:")
   st.dataframe(df)
 
-# Re-concatenate the dataframes after transforming 'Hora'
-all_data_after_hora_transform = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files after transforming 'Hora':")
-st.dataframe(all_data_after_hora_transform)
+# Re-concatenate the dataframes after modifying the 'Hora' column
+all_data_after_hora_modification = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after modifying 'Hora' column:")
+st.dataframe(all_data_after_hora_modification)
