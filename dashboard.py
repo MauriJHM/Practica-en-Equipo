@@ -46,7 +46,7 @@ if 'CAMION M01' in dfs:
 columns_to_drop = ['SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.', 'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral']
 
 st.write("Combined Data after dropping columns:")
-st.dataframe(all_data)
+
 
 # Optionally, drop the columns from each individual dataframe in the dictionary
 for df_name, df in dfs.items():
