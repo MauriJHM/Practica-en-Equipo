@@ -34,3 +34,18 @@ for file_path in file_paths:
         st.error(f"Error loading {file_path}: {e}")
 
 # Now you can access the dataframes using the dictionary 'dfs'
+# prompt: En cada dataframe agrega una columna al inicio con el nombre del archivo en el que esta como por ejemplo "CAMION M01"
+
+# Add a column with the file name to each dataframe
+for df_name, df in dfs.items():
+  df.insert(0, 'Nombre Archivo', df_name)
+
+# Display the dataframes with the new column
+for df_name, df in dfs.items():
+  st.write(f"Contents of {df_name}.xlsx with added column:")
+  st.dataframe(df)
+
+# You can re-concatenate them after adding the column if needed
+all_data_with_filename = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files with added column:")
+st.dataframe(all_data_with_filename)
