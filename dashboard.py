@@ -194,3 +194,37 @@ fig.update_layout(
 
 # Display the plot
 st.plotly_chart(fig)
+
+# prompt: En la columna Estatus cambia el nombre propio de la persona por el numero 1 y 2 respectivamente por cada camion
+
+# Replace person names with 1 and 2 in the 'Estatus' column for each truck
+for df_name, df in dfs.items():
+  if 'Estatus' in df.columns:
+    # Get unique names in the 'Estatus' column for this truck
+    unique_names = df['Estatus'].dropna().unique()
+
+    # Create a mapping based on the order they appear, mapping the first two unique names to 1 and 2
+    name_mapping = {}
+    count = 1
+    for name in unique_names:
+      if count <= 2:
+        name_mapping[name] = count
+        count += 1
+      else:
+        # For names beyond the first two, you might want to decide how to handle them
+        # Here, we'll just map them to a default value (e.g., None, or keep the original name)
+        # Let's keep the original name for clarity if there are more than 2
+        name_mapping[name] = name # Or name_mapping[name] = None if you want to replace them
+
+    # Apply the mapping to the 'Estatus' column
+    dfs[df_name]['Estatus'] = dfs[df_name]['Estatus'].map(name_mapping)
+
+    st.write(f"Replaced names in 'Estatus' column for {df_name}")
+    st.dataframe(dfs[df_name])
+  else:
+    st.write(f"'Estatus' column not found in {df_name}")
+
+# Re-concatenate the dataframes after making the replacements
+all_data_after_replace = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after replacing names in 'Estatus':")
+st.dataframe(all_data_after_replace)
