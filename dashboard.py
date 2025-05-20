@@ -68,18 +68,20 @@ all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
 
-# prompt: Elimina solo las letras "am" y "pm" de la columna Hora
+ prompt: Elimina las letras de la Columna Hora y deja solo los numeros 
 
-# Assuming 'all_data_after_drop' is the dataframe you want to modify
-# Make sure the 'Hora' column exists before trying to modify it
-if 'Hora' in all_data_after_drop.columns:
-  all_data_after_drop['Hora'] = all_data_after_drop['Hora'].astype(str).str.replace('am', '').str.replace('pm', '')
-  st.write("Modified 'Hora' column in combined data:")
-  st.dataframe(all_data_after_drop)
-else:
-  st.warning("Column 'Hora' not found in the combined dataframe.")
+for df_name, df in dfs.items():
+  if 'Hora' in df.columns:
+    # Convert the 'Hora' column to string type
+    dfs[df_name]['Hora'] = dfs[df_name]['Hora'].astype(str)
+    # Remove non-digit characters using a regular expression
+    dfs[df_name]['Hora'] = dfs[df_name]['Hora'].str.replace(r'\D+', '', regex=True)
+    st.write(f"Removed non-digit characters from 'Hora' in {df_name}")
+  else:
+    st.write(f"'Hora' column not found in {df_name}")
 
-# Re-concatenate the dataframes after modifying the 'Hora' column
-all_data_after_hora_modification = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files after modifying 'Hora' column:")
-st.dataframe(all_data_after_hora_modification)
+
+# Re-concatenate the dataframes after cleaning 'Hora'
+all_data_after_hora_clean = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after cleaning 'Hora':")
+st.dataframe(all_data_after_hora_clean)
