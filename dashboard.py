@@ -39,23 +39,3 @@ if 'CAMION M01' in dfs:
     st.write("Contents of CAMION M01.xlsx:")
     st.dataframe(dfs['CAMION M01'])
 
-# You can perform operations on the loaded dataframes here
-# For example, concatenate them:
-all_data = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files:")
-st.dataframe(all_data)
-
-# prompt: elimina las columnas SD ST BD BT AD AT BLD BLT Vel. Max. Cred. Adu Cred. Est Cred. Disc Cred. Gral
-
-# Columns to drop
-columns_to_drop = ['SD', 'ST', 'BD', 'BT', 'AD', 'AT', 'BLD', 'BLT', 'Vel. Max.', 'Cred. Adu', 'Cred. Est', 'Cred. Disc', 'Cred. Gral']
-
-# Drop the specified columns from each DataFrame in the dictionary
-for df_name, df in dfs.items():
-    dfs[df_name] = df.drop(columns=columns_to_drop, errors='ignore')
-    st.write(f"Dropped specified columns from {df_name}")
-
-# Recreate the concatenated DataFrame with the modified DataFrames
-all_data = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data after dropping columns:")
-st.dataframe(all_data)
