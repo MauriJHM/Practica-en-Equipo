@@ -6,10 +6,10 @@ import pandas as pd
 import streamlit as st
 
 file_paths = [
-    'CAMION M01.xlsx', '/content/CAMION M02.xlsx', '/content/CAMION M03.xlsx',
-    '/content/CAMION M04.xlsx', '/content/CAMION M05.xlsx', '/content/CAMION M06.xlsx',
-    '/content/CAMION M07.xlsx', '/content/CAMION M08.xlsx', '/content/CAMION M09.xlsx',
-    '/content/CAMION M10.xlsx', '/content/CAMION M11.xlsx', '/content/CAMION M12.xlsx'
+    'CAMION M01.xlsx', 'CAMION M02.xlsx', 'CAMION M03.xlsx',
+    'CAMION M04.xlsx', 'CAMION M05.xlsx', 'CAMION M06.xlsx',
+    'CAMION M07.xlsx', 'CAMION M08.xlsx', 'CAMION M09.xlsx',
+    'CAMION M10.xlsx', 'CAMION M11.xlsx', 'CAMION M12.xlsx'
 ]
 
 all_data = pd.DataFrame()
