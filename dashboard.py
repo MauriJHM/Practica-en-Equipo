@@ -62,10 +62,6 @@ for df_name, df in dfs.items():
     st.write(f"None of the specified columns to drop were found in {df_name}")
 
 
-# Display the dataframes after dropping columns
-for df_name, df in dfs.items():
-  st.write(f"Contents of {df_name}.xlsx after dropping columns:")
-  st.dataframe(df)
 
 # Re-concatenate the dataframes after dropping columns
 all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
