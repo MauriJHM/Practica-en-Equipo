@@ -93,3 +93,41 @@ all_data_after_drop = all_data_after_drop.drop(columns=['Fecha', 'Hora'])
 # Display the dataframe after dropping original columns
 st.write("Combined Data after dropping original 'Fecha' and 'Hora' columns:")
 st.dataframe(all_data_after_drop)
+
+# prompt: crea una nueva columna al final llamada "Inicio de Ruta Promedio" donde utilices el datetime Fecha_Hora y la hora inicial de cada dia para realizar un promedio de cada dia para cada "CAMION MXX"
+
+# Calculate the average start time for each day and truck
+all_data_after_drop['Fecha'] = all_data_after_drop['Fecha_Hora'].dt.date
+
+# Group by 'Nombre Archivo' (which represents the truck) and 'Fecha'
+daily_start_times = all_data_after_drop.groupby(['Nombre Archivo', 'Fecha'])['Fecha_Hora'].min()
+
+# Calculate the average start time across all days for each truck
+# This part is a bit tricky as averaging datetimes directly isn't standard.
+# We can calculate the average time of day.
+daily_start_times_time = daily_start_times.dt.time
+
+# To average times, we can convert them to seconds since midnight, average, then convert back
+def time_to_seconds(t):
+  return t.hour * 3600 + t.minute * 60 + t.second
+
+def seconds_to_time(s):
+  hours, remainder = divmod(s, 3600)
+  minutes, seconds = divmod(remainder, 60)
+  return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+
+average_start_times_seconds = daily_start_times_time.apply(time_to_seconds).groupby('Nombre Archivo').mean()
+
+# Convert the average seconds back to a time string
+average_start_times_str = average_start_times_seconds.apply(seconds_to_time)
+
+# Create a new DataFrame to merge the average start times back
+average_start_times_df = average_start_times_str.reset_index()
+average_start_times_df.rename(columns={'Fecha_Hora': 'Inicio de Ruta Promedio'}, inplace=True)
+
+# Merge the average start times back to the original dataframe based on 'Nombre Archivo'
+all_data_after_drop = pd.merge(all_data_after_drop, average_start_times_df, on='Nombre Archivo', how='left')
+
+# Display the dataframe with the new 'Inicio de Ruta Promedio' column
+st.write("Combined Data with 'Inicio de Ruta Promedio' column:")
+st.dataframe(all_data_after_drop)
