@@ -44,8 +44,8 @@ else:
 
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
-!pip install pandas openpyxl streamlit
 
 
 file_paths = [
