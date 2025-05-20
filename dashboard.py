@@ -68,20 +68,22 @@ all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
 
-# prompt: en la columna hora, elimina el pm y am y transformalo a datetime
+# prompt: transforma la columna Hora a datetime
 
-# Iterate through each dataframe in the dictionary
+# Transform the 'Hora' column to datetime for each dataframe
 for df_name, df in dfs.items():
-  # Check if the 'Hora' column exists
   if 'Hora' in df.columns:
-    # Remove 'AM' and 'PM' and convert to datetime
-    # Using errors='coerce' will turn invalid parsing into NaT (Not a Time)
-    dfs[df_name]['Hora'] = pd.to_datetime(df['Hora'].astype(str).str.replace('[AP]M', '', regex=True).str.strip(), format='%I:%M:%S', errors='coerce')
-    st.write(f"Converted 'Hora' column to datetime in {df_name}")
+    dfs[df_name]['Hora'] = pd.to_datetime(df['Hora'], errors='coerce').dt.time
+    st.write(f"Transformed 'Hora' column to time object in {df_name}")
   else:
     st.write(f"'Hora' column not found in {df_name}")
 
-# Re-concatenate the dataframes after the 'Hora' transformation
-all_data_after_hora = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files after 'Hora' transformation:")
-st.dataframe(all_data_after_hora)
+# Display the dataframes after transforming 'Hora'
+for df_name, df in dfs.items():
+  st.write(f"Contents of {df_name}.xlsx after transforming 'Hora':")
+  st.dataframe(df)
+
+# Re-concatenate the dataframes after transforming 'Hora'
+all_data_after_hora_transform = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after transforming 'Hora':")
+st.dataframe(all_data_after_hora_transform)
