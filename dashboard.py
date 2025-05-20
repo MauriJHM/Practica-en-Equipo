@@ -67,3 +67,17 @@ for df_name, df in dfs.items():
 all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files after dropping columns:")
 st.dataframe(all_data_after_drop)
+
+# prompt: convierte la columna Hora a datetime
+
+for df_name, df in dfs.items():
+  if 'Hora' in df.columns:
+    dfs[df_name]['Hora'] = pd.to_datetime(dfs[df_name]['Hora'], errors='coerce').dt.time
+    st.write(f"Converted 'Hora' column to datetime.time in {df_name}")
+  else:
+    st.write(f"'Hora' column not found in {df_name}")
+
+# Re-concatenate the dataframes after converting 'Hora'
+all_data_after_hora_convert = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data from all files after converting 'Hora':")
+st.dataframe(all_data_after_hora_convert)
