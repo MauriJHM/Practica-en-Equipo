@@ -40,11 +40,6 @@ for file_path in file_paths:
 for df_name, df in dfs.items():
   df.insert(0, 'Nombre Archivo', df_name)
 
-# Display the dataframes with the new column
-for df_name, df in dfs.items():
-  st.write(f"Contents of {df_name}.xlsx with added column:")
-  st.dataframe(df)
-
 # You can re-concatenate them after adding the column if needed
 all_data_with_filename = pd.concat(dfs.values(), ignore_index=True)
 st.write("Combined Data from all files with added column:")
