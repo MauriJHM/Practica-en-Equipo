@@ -81,8 +81,8 @@ st.dataframe(all_data_after_drop)
 # prompt: convierte la columna Hora a datetime
 
 # Convert the 'Hora' column to datetime objects
-all_data_after_drop['Hora'] = pd.to_datetime(all_data_after_drop['Hora'], format='%H:%M:%S').dt.time
+all_data_after_drop['Hora'] = pd.to_datetime(all_data_after_drop['Hora'])
 
-# Display the updated dataframe
-st.write("Combined Data after converting 'Hora' to datetime objects:")
+# Display the dataframe with the converted 'Hora' column
+st.write("Combined Data with 'Hora' column converted to datetime:")
 st.dataframe(all_data_after_drop)
