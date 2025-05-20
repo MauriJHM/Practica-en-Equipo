@@ -40,7 +40,7 @@ for file_path in file_paths:
 # df_m02 = dataframes['CAMION M02']
 # ...
 
- prompt: elimina las columnas que poseen 0s
+#prompt: elimina las columnas que poseen 0s
 
 # Create a new dictionary to store dataframes with columns containing zeros removed
 dataframes_cleaned = {}
