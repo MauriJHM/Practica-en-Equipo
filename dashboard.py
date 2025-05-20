@@ -195,36 +195,114 @@ fig.update_layout(
 # Display the plot
 st.plotly_chart(fig)
 
-# prompt: En la columna Estatus cambia el nombre propio de la persona por el numero 1 y 2 respectivamente por cada camion
+# prompt: en la columna estatus elimina todas las letras y reemplazalos por Conductor 1 y Conductor 2
 
-# Replace person names with 1 and 2 in the 'Estatus' column for each truck
-for df_name, df in dfs.items():
-  if 'Estatus' in df.columns:
-    # Get unique names in the 'Estatus' column for this truck
-    unique_names = df['Estatus'].dropna().unique()
+# Replace characters in 'Estatus' column
+# Assuming you want to replace specific patterns of letters
+# For example, replace any row in 'Estatus' containing letters with 'Conductor 1'
+# And other rows in 'Estatus' containing letters with 'Conductor 2'.
+# This requires a specific logic to determine which rows get 'Conductor 1' vs 'Conductor 2'.
+# As per the prompt, let's assume you want to replace ALL values in 'Estatus' that
+# contain letters with EITHER 'Conductor 1' or 'Conductor 2' based on some
+# implicit condition not provided.
 
-    # Create a mapping based on the order they appear, mapping the first two unique names to 1 and 2
-    name_mapping = {}
-    count = 1
-    for name in unique_names:
-      if count <= 2:
-        name_mapping[name] = count
-        count += 1
-      else:
-        # For names beyond the first two, you might want to decide how to handle them
-        # Here, we'll just map them to a default value (e.g., None, or keep the original name)
-        # Let's keep the original name for clarity if there are more than 2
-        name_mapping[name] = name # Or name_mapping[name] = None if you want to replace them
+# A simple interpretation is to just remove the letters and then assign based on some rule.
+# Since the rule is not specified, a simple approach is to replace all non-digit
+# characters and then perhaps map the resulting values to 'Conductor 1' or 'Conductor 2'.
 
-    # Apply the mapping to the 'Estatus' column
-    dfs[df_name]['Estatus'] = dfs[df_name]['Estatus'].map(name_mapping)
+# Let's assume a different interpretation: replace all values in the 'Estatus' column
+# that originally contained any letters with either 'Conductor 1' or 'Conductor 2'.
+# The assignment between 'Conductor 1' and 'Conductor 2' is still ambiguous.
 
-    st.write(f"Replaced names in 'Estatus' column for {df_name}")
-    st.dataframe(dfs[df_name])
-  else:
-    st.write(f"'Estatus' column not found in {df_name}")
+# A more concrete interpretation: replace all rows where 'Estatus' contains letters
+# with "Conductor 1" if some other condition is met, and "Conductor 2" otherwise.
+# Without a condition, let's apply a simpler rule: if the original 'Estatus' contained
+# letters, replace it. We'll need a rule to assign 'Conductor 1' or 'Conductor 2'.
 
-# Re-concatenate the dataframes after making the replacements
-all_data_after_replace = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files after replacing names in 'Estatus':")
-st.dataframe(all_data_after_replace)
+# Let's make an assumption:
+# If the original value had letters AND ended with '1', replace with 'Conductor 1'.
+# If the original value had letters AND ended with '2', replace with 'Conductor 2'.
+# If the original value had letters but didn't end with '1' or '2', handle as needed (e.g., default to Conductor 1).
+# If the original value did NOT have letters, keep it as is (although the prompt implies replacing where letters exist).
+
+# A simpler interpretation matching the prompt: replace the contents of the 'Estatus'
+# column where letters exist, and assign 'Conductor 1' or 'Conductor 2'.
+# Let's assume a pattern: If the original 'Estatus' had the letter 'A', replace with 'Conductor 1'.
+# If the original 'Estatus' had the letter 'B', replace with 'Conductor 2'.
+# This is still an arbitrary assumption.
+
+# Let's try a direct replacement approach based on the likely meaning:
+# If a row's original 'Estatus' value had letters, it likely indicates a state or action.
+# We need a way to map these states/actions to 'Conductor 1' or 'Conductor 2'.
+
+# A plausible scenario: the original 'Estatus' column contained codes like "Route A1", "Route B2", etc.,
+# and you want to assign "Conductor 1" to rows related to "Route A" and "Conductor 2" to "Route B".
+
+# Let's make the most straightforward interpretation based on the request:
+# Find rows where 'Estatus' contains letters. For these rows, set 'Estatus' to 'Conductor 1' or 'Conductor 2'.
+# How to decide between Conductor 1 and 2? Let's assume alternating assignment or based on the original value.
+
+# Let's try replacing based on whether the original value *contained* a '1' or '2' along with letters.
+# This is still making assumptions.
+
+# The most literal interpretation of "elimina todas las letras y reemplazalos por Conductor 1 y Conductor 2"
+# is to remove the letters and *then* somehow use the remaining numbers to assign 'Conductor 1' or 'Conductor 2'.
+# Example: "AB12CD" -> remove letters -> "12". Then map "12" to 'Conductor 1' or 'Conductor 2'. This seems unlikely.
+
+# Let's go with a more probable intent: The original 'Estatus' values like 'A', 'B', 'C', 'D', etc.,
+# represent different states or types, and you want to map some to 'Conductor 1' and others to 'Conductor 2'.
+
+# Let's assume a simple mapping for demonstration:
+# If 'Estatus' originally contained 'A', 'B', or 'C', replace with 'Conductor 1'.
+# If 'Estatus' originally contained 'D', 'E', or 'F', replace with 'Conductor 2'.
+# For any other case where letters exist, we can define a default or add more conditions.
+
+# First, identify which rows in the original 'Estatus' contained letters.
+# We should do this *before* modifying the 'Estatus' column.
+
+# Let's create a temporary column to store the original 'Estatus' values if needed,
+# or just work directly on the column if the logic is simple replacement.
+
+# Let's assume a pattern based on the number *following* the letters, if any.
+# If the original 'Estatus' was something like "ABC1", replace with "Conductor 1".
+# If the original 'Estatus' was something like "XYZ2", replace with "Conductor 2".
+# If the original 'Estatus' contained letters but no '1' or '2' at the end, what happens?
+
+# Let's use a simpler approach based on checking for the presence of digits 1 or 2 in the original string
+# *after* removing other letters, but only for rows that *originally* contained letters.
+
+# Identify rows that originally contained letters
+rows_with_letters = all_data_after_drop['Estatus'].astype(str).str.contains(r'[a-zA-Z]', na=False)
+
+# For rows with letters, try to extract the digit (1 or 2) after removing other letters.
+# If a '1' is found, assign 'Conductor 1'. If a '2' is found, assign 'Conductor 2'.
+# If neither is found or multiple are found, we need a rule.
+# Let's assume the rule is: if it contains '1' after removing letters, it's Conductor 1. Otherwise, it's Conductor 2
+# (assuming it contained letters in the first place).
+
+def assign_conductor(original_status):
+    if pd.isna(original_status):
+        return original_status
+    original_status_str = str(original_status)
+    if any(c.isalpha() for c in original_status_str): # Check if it originally had letters
+        # Remove all characters that are not '1' or '2' from the original string
+        digits_one_two = ''.join(c for c in original_status_str if c in ['1', '2'])
+        if '1' in digits_one_two:
+            return 'Conductor 1'
+        elif '2' in digits_one_two:
+            return 'Conductor 2'
+        else:
+            # If it had letters but no '1' or '2' after removing other characters,
+            # default to Conductor 1 as an example, or handle differently
+            return 'Conductor 1' # Defaulting for demonstration
+    else:
+        # If the original value did not have letters, keep it as is.
+        return original_status
+
+# Apply the function to the 'Estatus' column
+all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].apply(assign_conductor)
+
+
+# Display the dataframe after modifying the 'Estatus' column
+st.write("Combined Data after updating 'Estatus' column:")
+st.dataframe(all_data_after_drop)
