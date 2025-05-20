@@ -78,45 +78,83 @@ all_data_after_drop['Hora'] = all_data_after_drop['Hora'].astype(str).str.replac
 st.write("Combined Data after removing letters from 'Hora' column:")
 st.dataframe(all_data_after_drop)
 
-# prompt: Agrega al final la columna "Promedio Inicio de Ruta" y despues usando la columna hora, saca el promedio de cada hora inicial del dia transformado la columna Horas a segundos
+# prompt: Agrega al final la columna "Promedio Inicio de Ruta" y despues usando la columna hora, saca el promedio de cada hora inicial del dia transformado la columna Horas a segundos para cada apartado de la Columna "Nombre Archivo"
 
-# Add the "Promedio Inicio de Ruta" column
-all_data_after_drop['Promedio Inicio de Ruta'] = ''
-
-# Function to convert HH:MM:SS to seconds
+# Function to convert 'HH:MM:SS' time string to seconds
 def time_to_seconds(time_str):
     if pd.isna(time_str):
-        return 0
+        return None
     try:
-        # Handle potential variations in time format by splitting
-        parts = str(time_str).split(':')
-        if len(parts) == 3:
-            h, m, s = map(int, parts)
+        # Handle potential whitespace and split by colon
+        parts = str(time_str).strip().split(':')
+        # Ensure there are at least 3 parts for HH:MM:SS format
+        if len(parts) >= 3:
+            h, m, s = map(int, parts[:3])
             return h * 3600 + m * 60 + s
-        elif len(parts) == 2:
-             h, m = map(int, parts)
+        elif len(parts) == 2: # Handle HH:MM format if necessary
+             h, m = map(int, parts[:2])
              return h * 3600 + m * 60
         else:
-             return 0 # Return 0 for unexpected formats
+            return None # Or handle other formats/errors
     except ValueError:
-        return 0 # Return 0 for values that cannot be converted to int
+        return None # Handle cases where conversion to int fails
 
-# Convert 'Hora' column to seconds
-all_data_after_drop['Hora_seconds'] = all_data_after_drop['Hora'].apply(time_to_seconds)
+# Apply the conversion function to the 'Hora' column to create 'Hora_segundos'
+all_data_after_drop['Hora_segundos'] = all_data_after_drop['Hora'].apply(time_to_seconds)
 
-# Calculate the average of the 'Hora_seconds' column
-average_seconds = all_data_after_drop['Hora_seconds'].mean()
+# Calculate the average of 'Hora_segundos' for each 'Nombre Archivo'
+average_start_time_seconds = all_data_after_drop.groupby('Nombre Archivo')['Hora_segundos'].mean().reset_index()
 
-# Function to convert seconds back to HH:MM:SS format
+# Rename the column to "Promedio Inicio de Ruta"
+average_start_time_seconds.rename(columns={'Hora_segundos': 'Promedio Inicio de Ruta'}, inplace=True)
+
+# Merge the average start time back to the original combined dataframe if needed,
+# or you can display the average start time separately.
+# For this task, we will add it as a new column to a summary DataFrame
+# showing the average for each file.
+
+# Display the average start times per file
+st.write("Average Start Time (in seconds) per File:")
+st.dataframe(average_start_time_seconds)
+
+# You can convert the average seconds back to HH:MM:SS format for better readability
 def seconds_to_time(seconds):
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
+    if pd.isna(seconds):
+        return None
+    seconds = int(seconds)
+    h = seconds // 3600
+    m = (seconds % 3600) // 60
+    s = seconds % 60
     return f'{h:02d}:{m:02d}:{s:02d}'
 
-# Assign the average time (converted back to HH:MM:SS) to the new column
-all_data_after_drop['Promedio Inicio de Ruta'] = seconds_to_time(average_seconds)
+average_start_time_seconds['Promedio Inicio de Ruta (HH:MM:SS)'] = average_start_time_seconds['Promedio Inicio de Ruta'].apply(seconds_to_time)
 
-# Display the dataframe with the new column and the calculated average
-st.write("Combined Data with 'Promedio Inicio de Ruta' and calculated average:")
-st.dataframe(all_data_after_drop)
+st.write("Average Start Time (in HH:MM:SS) per File:")
+st.dataframe(average_start_time_seconds[['Nombre Archivo', 'Promedio Inicio de Ruta (HH:MM:SS)']])
+
+# If you want to add the average back to the main dataframe, you might repeat
+# the average value for all rows belonging to that 'Nombre Archivo'.
+# This might not be the desired output based on the prompt ("Agrega al final la columna 'Promedio Inicio de Ruta'").
+# Assuming the user wants a summary table as calculated above,
+# the 'average_start_time_seconds' DataFrame is the result.
+
+# If the intention was to add a column to the *original* dataframes with the overall average
+# for that file repeated in each row, you would do something like this:
+# For each dataframe in the dfs dictionary:
+#   file_name = df_name
+#   avg_time = average_start_time_seconds[average_start_time_seconds['Nombre Archivo'] == file_name]['Promedio Inicio de Ruta'].iloc[0]
+#   dfs[df_name]['Promedio Inicio de Ruta'] = avg_time
+
+# Let's assume the user wants the summary table. The calculated `average_start_time_seconds`
+# DataFrame already contains the required information.
+
+# The prompt asks to add the column "Promedio Inicio de Ruta" "al final".
+# If this means appending the summary table to the display of the main dataframe,
+# we have already done that by displaying `average_start_time_seconds`.
+
+# If it means adding the average for each file back into the `all_data_after_drop` dataframe,
+# repeating the average for each row of a given 'Nombre Archivo':
+all_data_with_avg = pd.merge(all_data_after_drop, average_start_time_seconds[['Nombre Archivo', 'Promedio Inicio de Ruta']], on='Nombre Archivo', how='left')
+
+st.write("Combined Data with 'Promedio Inicio de Ruta' column:")
+st.dataframe(all_data_with_avg)
