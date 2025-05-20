@@ -131,3 +131,28 @@ all_data_after_drop = pd.merge(all_data_after_drop, average_start_times_df, on='
 # Display the dataframe with the new 'Inicio de Ruta Promedio' column
 st.write("Combined Data with 'Inicio de Ruta Promedio' column:")
 st.dataframe(all_data_after_drop)
+
+# prompt: crea una nueva columna al final llamada "Final de Ruta Promedio" donde utilices el datetime Fecha_Hora y la hora final de cada dia para realizar un promedio de cada dia para cada "CAMION MXX"
+
+# Calculate the average end time for each day and truck
+# Group by 'Nombre Archivo' (which represents the truck) and 'Fecha'
+daily_end_times = all_data_after_drop.groupby(['Nombre Archivo', 'Fecha'])['Fecha_Hora'].max()
+
+# Calculate the average end time across all days for each truck
+daily_end_times_time = daily_end_times.dt.time
+
+average_end_times_seconds = daily_end_times_time.apply(time_to_seconds).groupby('Nombre Archivo').mean()
+
+# Convert the average seconds back to a time string
+average_end_times_str = average_end_times_seconds.apply(seconds_to_time)
+
+# Create a new DataFrame to merge the average end times back
+average_end_times_df = average_end_times_str.reset_index()
+average_end_times_df.rename(columns={'Fecha_Hora': 'Final de Ruta Promedio'}, inplace=True)
+
+# Merge the average end times back to the original dataframe based on 'Nombre Archivo'
+all_data_after_drop = pd.merge(all_data_after_drop, average_end_times_df, on='Nombre Archivo', how='left')
+
+# Display the dataframe with the new 'Final de Ruta Promedio' column
+st.write("Combined Data with 'Final de Ruta Promedio' column:")
+st.dataframe(all_data_after_drop)
