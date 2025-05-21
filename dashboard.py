@@ -276,56 +276,39 @@ chart_duracion = alt.Chart(data_2025).mark_bar().encode(
 # Display the histogram in Streamlit
 st.altair_chart(chart_duracion, use_container_width=True)
 
-# prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias con diferentes colores
+# prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias con diferentes colores para cada "CAMION MXX"
 
-# Assume 'data_2025' DataFrame exists from the previous code
+# Assume `dfs` is the dictionary containing dataframes for each truck, already loaded and cleaned
 
-# For a single truck, let's choose 'CAMION M01' as an example
-truck_name = 'CAMION M01'
-data_truck = data_2025[data_2025['Nombre Archivo'] == truck_name].copy()
+# Number of days in the month (assuming 31 as specified)
+total_days_in_month = 31
 
-# Calculate the number of days the truck had recorded data in January 2025
-days_present_jan = data_truck[data_truck['Fecha_Hora'].dt.month == 1]['Fecha'].nunique()
+# Create a list to store data for the pie chart
+pie_chart_data = []
 
-# Total days in January
-total_days_jan = 31
+for truck_name, df in dfs.items():
+    # Count the number of unique dates for each truck
+    days_worked = df['Fecha'].nunique()
 
-# Calculate the number of days the truck was absent in January
-days_absent_jan = total_days_jan - days_present_jan
+    # Calculate the number of days not worked
+    days_not_worked = total_days_in_month - days_worked
 
-# Create a DataFrame for the pie chart
-pie_data = pd.DataFrame({
-    'Categoria': ['Dias Asistidos', 'Dias Faltantes'],
-    'Cantidad': [days_present_jan, days_absent_jan]
-})
+    # Append data for this truck to the list
+    pie_chart_data.append({'CAMION': truck_name, 'Tipo': 'Asistencia', 'Dias': days_worked})
+    pie_chart_data.append({'CAMION': truck_name, 'Tipo': 'Falta', 'Dias': days_not_worked})
+
+# Convert the list of dictionaries into a pandas DataFrame
+pie_chart_df = pd.DataFrame(pie_chart_data)
 
 # Create the pie chart using Altair
-chart_pie = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
-    theta=alt.Theta(field="Cantidad", type="quantitative"),
-    color=alt.Color(field="Categoria", type="nominal",
-                    scale=alt.Scale(domain=['Dias Asistidos', 'Dias Faltantes'],
-                                    range=['#1f77b4', '#ff7f0e'])), # Use different colors
-    order=alt.Order(field="Cantidad", sort="descending"),
-    tooltip=["Categoria", "Cantidad", alt.Tooltip("Cantidad", title="Porcentaje", format=".1%")]
+pie_chart = alt.Chart(pie_chart_df).mark_arc(outerRadius=120).encode(
+    theta=alt.Theta(field="Dias", type="quantitative"),
+    color=alt.Color(field="Tipo", type="nominal"),
+    facet=alt.Facet("CAMION:N", columns=4), # Create separate pie charts for each truck
+    tooltip=["CAMION", "Tipo", "Dias", alt.Tooltip("Dias", aggregate="sum", title="Total Días")]
 ).properties(
-    title=f'Distribución de Días Asistidos vs. Faltantes para {truck_name} en Enero 2025'
+    title="Días de Asistencia vs Faltas por Camión (Basado en 31 Días)"
 )
 
-# Add text labels to the pie chart
-text = chart_pie.mark_text(radius=140).encode(
-    text=alt.Text(field="Cantidad", type="quantitative"),
-    order=alt.Order(field="Cantidad", sort="descending"),
-    color=alt.value("black") # Set the color of the labels
-)
-
-# Combine the pie chart and the text
-final_chart = chart_pie + text
-
-# Display the pie chart in Streamlit
-st.altair_chart(final_chart, use_container_width=True)
-
-# You can repeat this for each truck or create a dropdown to select the truck
-# For example, to create a dropdown:
-# truck_list = data_2025['Nombre Archivo'].unique().tolist()
-# selected_truck = st.selectbox('Selecciona un Camión:', truck_list)
-# Then calculate and display the pie chart for the selected_truck
+# Display the chart in Streamlit
+st.altair_chart(pie_chart, use_container_width=True)
