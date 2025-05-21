@@ -166,37 +166,61 @@ all_data_after_drop['Estatus'] = 'Conductores'
 st.write("Combined Data after replacing 'Estatus' with 'Conductores':")
 st.dataframe(all_data_after_drop)
 
-#prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit
+# prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit y como eje y las horas del dia
 
 import plotly.express as px
 
-# Ensure 'Fecha' is in datetime format for plotting
-all_data_after_drop['Fecha'] = pd.to_datetime(all_data_after_drop['Fecha'])
+# Convert 'Inicio de Ruta Promedio' and 'Final de Ruta Promedio' from string time to datetime.time
+# This is needed to correctly represent the time of day on the y-axis.
+# We'll use a dummy date for plotting purposes, as we only care about the time part.
+all_data_after_drop['Inicio de Ruta Promedio_dt'] = pd.to_datetime(all_data_after_drop['Inicio de Ruta Promedio'], format='%H:%M:%S').dt.time
+all_data_after_drop['Final de Ruta Promedio_dt'] = pd.to_datetime(all_data_after_drop['Final de Ruta Promedio'], format='%H:%M:%S').dt.time
 
-# Convert 'Inicio de Ruta Promedio' and 'Final de Ruta Promedio' from string 'HH:MM:SS' to datetime for plotting
-# We can create a dummy date and combine it with the time string to create datetime objects
-# A simple way is to use the date from the 'Fecha' column
-# Note: This assumes the time string represents the time on that specific 'Fecha'.
-# If the time can span midnight, this approach needs adjustment.
-all_data_after_drop['Inicio de Ruta Promedio Datetime'] = pd.to_datetime(all_data_after_drop['Fecha'].astype(str) + ' ' + all_data_after_drop['Inicio de Ruta Promedio'], errors='coerce')
-all_data_after_drop['Final de Ruta Promedio Datetime'] = pd.to_datetime(all_data_after_drop['Fecha'].astype(str) + ' ' + all_data_after_drop['Final de Ruta Promedio'], errors='coerce')
+# For plotting, we need a datetime format that includes a date, even if it's just for the structure
+# We can combine the 'Fecha' with the time. Since 'Fecha' is already date, we just need to
+# combine it with the time objects. A simple way is to create a datetime using a base date.
+# Let's use the first day of the year of the date for simplicity in plotting the time.
+# This assumes 'Fecha' is a date object.
 
-# Create the line plot
-fig = px.line(
-    all_data_after_drop.groupby(['Fecha', 'Nombre Archivo'])[['Inicio de Ruta Promedio Datetime', 'Final de Ruta Promedio Datetime']].first().reset_index(),
-    x="Fecha",
-    y=["Inicio de Ruta Promedio Datetime", "Final de Ruta Promedio Datetime"],
-    color='Nombre Archivo', # To distinguish lines for each truck
-    title="Inicio y Final de Ruta Promedio por Fecha y Camión"
-)
+# Ensure 'Fecha' is a datetime object (it was converted to date earlier, converting back to datetime for plotting)
+all_data_after_drop['Fecha_dt'] = pd.to_datetime(all_data_after_drop['Fecha'])
 
-# Customize the layout if needed
+# Combine date and time for plotting. We'll use the date from 'Fecha_dt' and the time from
+# 'Inicio de Ruta Promedio_dt' and 'Final de Ruta Promedio_dt'.
+# However, for a line plot with 'Fecha' on the x-axis and time of day on the y-axis,
+# we need the y-axis values to be plottable as time. Plotly handles datetime objects.
+# We can create full datetime objects by combining the date with the average times.
+
+# Convert the time objects back to datetime objects by adding them to the corresponding date
+all_data_after_drop['Inicio_Ruta_Datetime'] = all_data_after_drop.apply(lambda row: pd.to_datetime(f"{row['Fecha']} {row['Inicio de Ruta Promedio']}"), axis=1)
+all_data_after_drop['Final_Ruta_Datetime'] = all_data_after_drop.apply(lambda row: pd.to_datetime(f"{row['Fecha']} {row['Final de Ruta Promedio']}"), axis=1)
+
+
+# Select only the necessary columns for plotting and drop duplicates based on 'Fecha' and 'Nombre Archivo'
+# as the average start/end times are the same for all rows of a given truck on a given day.
+plot_data = all_data_after_drop[['Fecha', 'Nombre Archivo', 'Inicio_Ruta_Datetime', 'Final_Ruta_Datetime']].drop_duplicates(subset=['Fecha', 'Nombre Archivo']).copy()
+
+# Melt the DataFrame to plot both start and end times on the same y-axis
+plot_data_melted = plot_data.melt(id_vars=['Fecha', 'Nombre Archivo'],
+                                  value_vars=['Inicio_Ruta_Datetime', 'Final_Ruta_Datetime'],
+                                  var_name='Tipo de Ruta',
+                                  value_name='Tiempo')
+
+# Create the line chart
+fig = px.line(plot_data_melted,
+              x='Fecha',
+              y='Tiempo',
+              color='Nombre Archivo',
+              line_dash='Tipo de Ruta',
+              title='Inicio y Final de Ruta Promedio por Camión a lo Largo del Tiempo')
+
+# Customize the y-axis to show time of day
 fig.update_layout(
-    xaxis_title="Fecha",
-    yaxis_title="Hora Promedio",
-    legend_title="Camión"
+    yaxis=dict(
+        tickformat='%H:%M',  # Format ticks as hour:minute
+        title='Hora del Día'
+    )
 )
 
 # Display the chart in Streamlit
 st.plotly_chart(fig)
-
