@@ -276,39 +276,56 @@ chart_duracion = alt.Chart(data_2025).mark_bar().encode(
 # Display the histogram in Streamlit
 st.altair_chart(chart_duracion, use_container_width=True)
 
-#prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias
+# prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias con diferentes colores
 
-# Calculate the number of unique days attended per truck in 2025
-attended_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique().reset_index(name='Dias Asistidos')
+# Assume 'data_2025' DataFrame exists from the previous code
 
-# Define the total days in a month
-total_days_in_month = 31
+# For a single truck, let's choose 'CAMION M01' as an example
+truck_name = 'CAMION M01'
+data_truck = data_2025[data_2025['Nombre Archivo'] == truck_name].copy()
 
-# Calculate the number of absent days
-attended_days['Dias Faltantes'] = total_days_in_month - attended_days['Dias Asistidos']
+# Calculate the number of days the truck had recorded data in January 2025
+days_present_jan = data_truck[data_truck['Fecha_Hora'].dt.month == 1]['Fecha'].nunique()
 
-# Reshape the data for the pie chart (long format)
-pie_data = attended_days.melt(id_vars='Nombre Archivo', value_vars=['Dias Asistidos', 'Dias Faltantes'],
-                               var_name='Estado', value_name='Cantidad de Días')
+# Total days in January
+total_days_jan = 31
 
-# Create the pie chart
-chart_pie_attendance = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
-    theta=alt.Theta(field="Cantidad de Días", type="quantitative"),
-    color=alt.Color(field="Estado", type="nominal"),
-    tooltip=["Nombre Archivo", "Estado", "Cantidad de Días"]
+# Calculate the number of days the truck was absent in January
+days_absent_jan = total_days_jan - days_present_jan
+
+# Create a DataFrame for the pie chart
+pie_data = pd.DataFrame({
+    'Categoria': ['Dias Asistidos', 'Dias Faltantes'],
+    'Cantidad': [days_present_jan, days_absent_jan]
+})
+
+# Create the pie chart using Altair
+chart_pie = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
+    theta=alt.Theta(field="Cantidad", type="quantitative"),
+    color=alt.Color(field="Categoria", type="nominal",
+                    scale=alt.Scale(domain=['Dias Asistidos', 'Dias Faltantes'],
+                                    range=['#1f77b4', '#ff7f0e'])), # Use different colors
+    order=alt.Order(field="Cantidad", sort="descending"),
+    tooltip=["Categoria", "Cantidad", alt.Tooltip("Cantidad", title="Porcentaje", format=".1%")]
 ).properties(
-    title='Distribución de Días Asistidos vs. Días Faltantes por Camión (Base 31 días)'
+    title=f'Distribución de Días Asistidos vs. Faltantes para {truck_name} en Enero 2025'
 )
 
 # Add text labels to the pie chart
-text = chart_pie_attendance.mark_text(radius=140).encode(
-    text=alt.Text("Cantidad de Días", format=".1f"),
-    order=alt.Order("Estado"),
-    color=alt.value("black")
+text = chart_pie.mark_text(radius=140).encode(
+    text=alt.Text(field="Cantidad", type="quantitative"),
+    order=alt.Order(field="Cantidad", sort="descending"),
+    color=alt.value("black") # Set the color of the labels
 )
 
 # Combine the pie chart and the text
-final_chart_pie = chart_pie_attendance + text
+final_chart = chart_pie + text
 
 # Display the pie chart in Streamlit
-st.altair_chart(final_chart_pie, use_container_width=True)
+st.altair_chart(final_chart, use_container_width=True)
+
+# You can repeat this for each truck or create a dropdown to select the truck
+# For example, to create a dropdown:
+# truck_list = data_2025['Nombre Archivo'].unique().tolist()
+# selected_truck = st.selectbox('Selecciona un Camión:', truck_list)
+# Then calculate and display the pie chart for the selected_truck
