@@ -276,7 +276,7 @@ chart_duracion = alt.Chart(data_2025).mark_bar().encode(
 # Display the histogram in Streamlit
 st.altair_chart(chart_duracion, use_container_width=True)
 
- prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias
+#prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias
 
 # Calculate the number of unique days attended per truck in 2025
 attended_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique().reset_index(name='Dias Asistidos')
