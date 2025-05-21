@@ -195,34 +195,35 @@ fig.update_layout(
 # Display the plot
 st.plotly_chart(fig)
 
-# prompt: de la columna Estatus reemplaza los nombres de conductores con conductor 1 y conductor 2 respectivamente en CAMION M01, CAMION M02, CAMION M03 , CAMION M04 , CAMION M05 , CAMION M06 , CAMION M07 , CAMION M08 , CAMION M09 , CAMION M10 , CAMION M11 , CAMION M12
+# prompt: de la columna Estatus reemplaza los nombres de conductores con conductor 1 y conductor 2 respectivamente para las filas CAMION M01, CAMION M02, CAMION M03 , CAMION M04 , CAMION M05 , CAMION M06 , CAMION M07 , CAMION M08 , CAMION M09 , CAMION M10 , CAMION M11 , CAMION M12
 
-# Iterate through the dictionary of dataframes
-for df_name, df in dfs.items():
-  # Check if the dataframe name is in the list of target trucks
-  if df_name in ['CAMION M01', 'CAMION M02', 'CAMION M03', 'CAMION M04', 'CAMION M05', 'CAMION M06', 'CAMION M07', 'CAMION M08', 'CAMION M09', 'CAMION M10', 'CAMION M11', 'CAMION M12']:
-    # Check if the 'Estatus' column exists
-    if 'Estatus' in df.columns:
-      # Get the unique conductor names in the 'Estatus' column
-      conductores = df['Estatus'].unique()
-      # Create a mapping dictionary for replacement
-      conductor_mapping = {}
-      for i, conductor in enumerate(conductores):
-        conductor_mapping[conductor] = f'Conductor {i + 1}'
-      # Replace the names in the 'Estatus' column
-      dfs[df_name]['Estatus'] = dfs[df_name]['Estatus'].replace(conductor_mapping)
-      st.write(f"Replaced conductor names in 'Estatus' for {df_name}")
+# Define the truck names to replace
+truck_names_to_replace = [
+    'CAMION M01', 'CAMION M02', 'CAMION M03', 'CAMION M04',
+    'CAMION M05', 'CAMION M06', 'CAMION M07', 'CAMION M08',
+    'CAMION M09', 'CAMION M10', 'CAMION M11', 'CAMION M12'
+]
+
+# Iterate through the specified dataframes in the 'dfs' dictionary
+for df_name in truck_names_to_replace:
+    if df_name in dfs:
+        # Check if the 'Estatus' column exists
+        if 'Estatus' in dfs[df_name].columns:
+            # Replace all values in the 'Estatus' column with 'Conductor 1' or 'Conductor 2'
+            # Assign Conductor 1 to the first 6 trucks and Conductor 2 to the next 6
+            if truck_names_to_replace.index(df_name) < 6:
+                dfs[df_name]['Estatus'] = 'Conductor 1'
+                st.write(f"Replaced 'Estatus' for {df_name} with 'Conductor 1'")
+            else:
+                dfs[df_name]['Estatus'] = 'Conductor 2'
+                st.write(f"Replaced 'Estatus' for {df_name} with 'Conductor 2'")
+        else:
+            st.write(f"'Estatus' column not found in {df_name}")
     else:
-      st.write(f"'Estatus' column not found in {df_name}")
-  else:
-    st.write(f"Skipping conductor name replacement for {df_name}")
+        st.write(f"{df_name} not found in the loaded dataframes.")
 
-# Display the dataframes after replacement
-for df_name, df in dfs.items():
-  st.write(f"Contents of {df_name}.xlsx after replacing conductor names:")
-  st.dataframe(df)
-
-# Re-concatenate the dataframes after replacement
-all_data_after_replace = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data from all files after replacing conductor names:")
-st.dataframe(all_data_after_replace)
+# After the replacements, you might want to re-concatenate the dataframes
+# to reflect the changes in the combined 'all_data_after_drop' dataframe.
+all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
+st.write("Combined Data after replacing 'Estatus' values:")
+st.dataframe(all_data_after_drop)
