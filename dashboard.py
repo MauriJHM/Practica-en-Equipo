@@ -279,55 +279,25 @@ st.altair_chart(chart_duracion, use_container_width=True)
 # prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no
 
 # Calculate the number of distinct dates in 2025 for each truck
-total_potential_days_2025 = data_2025.groupby('Nombre Archivo')['Fecha'].nunique()
+total_scheduled_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique().reset_index(name='Dias Asistidos')
 
-# Calculate the number of actual attendance days for each truck
-actual_attendance_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique()
+# Assuming 365 days in 2025
+days_in_2025 = 365
+total_scheduled_days['Dias Faltantes'] = days_in_2025 - total_scheduled_days['Dias Asistidos']
 
-# Calculate the number of absent days
-absent_days = total_potential_days_2025 - actual_attendance_days
-
-# Prepare data for the pie chart
-pie_chart_data = pd.DataFrame({
-    'Nombre Archivo': actual_attendance_days.index,
-    'Dias Asistidos': actual_attendance_days.values,
-    'Dias Faltantes': absent_days.values
-})
-
-# Reshape the data for Altair (long format is preferred for charting)
-pie_chart_melted = pie_chart_data.melt(
-    id_vars='Nombre Archivo',
-    value_vars=['Dias Asistidos', 'Dias Faltantes'],
-    var_name='Estatus',
-    value_name='Cantidad de Días'
-)
+# Melt the DataFrame for the pie chart
+pie_data = total_scheduled_days.melt(id_vars='Nombre Archivo', value_vars=['Dias Asistidos', 'Dias Faltantes'], var_name='Tipo de Día', value_name='Cantidad de Días')
 
 # Create the pie chart
-# We will create a separate pie chart for each truck
-trucks = pie_chart_melted['Nombre Archivo'].unique()
+pie_chart = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
+    theta=alt.Theta(field="Cantidad de Días", type="quantitative"),
+    color=alt.Color(field="Tipo de Día", type="nominal"),
+    tooltip=["Nombre Archivo", "Tipo de Día", "Cantidad de Días"]
+).properties(
+    title='Distribución de Días Asistidos vs. Días Faltantes por Camión (2025)'
+).facet(
+    column=alt.Column('Nombre Archivo', header=alt.Header(titleOrient="bottom", labelOrient="bottom"))
+)
 
-for truck in trucks:
-    truck_data = pie_chart_melted[pie_chart_melted['Nombre Archivo'] == truck]
-
-    base = alt.Chart(truck_data).encode(
-        theta=alt.Theta("Cantidad de Días", stack=True)
-    )
-
-    pie = base.mark_arc(outerRadius=120).encode(
-        color=alt.Color("Estatus"),
-        order=alt.Order("Estatus"),
-        tooltip=["Estatus", "Cantidad de Días"]
-    )
-
-    text = base.mark_text(radius=140).encode(
-        text=alt.Text("Cantidad de Días"),
-        order=alt.Order("Estatus"),
-        color=alt.value("black")  # Set the color of the labels to black
-    )
-
-    chart = (pie + text).properties(
-        title=f'Distribución de Asistencia para {truck}'
-    )
-
-    st.altair_chart(chart, use_container_width=True)
-
+# Display the pie chart
+st.altair_chart(pie_chart, use_container_width=True)
