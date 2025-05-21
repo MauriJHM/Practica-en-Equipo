@@ -166,60 +166,60 @@ all_data_after_drop['Estatus'] = 'Conductores'
 st.write("Combined Data after replacing 'Estatus' with 'Conductores':")
 st.dataframe(all_data_after_drop)
 
-# prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit y como eje y las horas del dia en un formato de 24 horas
+# prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit y como eje y las horas del dia de 00:00 a 23:59
 
-import plotly.express as px
+import plotly.graph_objects as go
 
 # Convert the average time strings to datetime objects for plotting
-# We'll use a dummy date for the datetime conversion, as only the time component matters for the y-axis
-all_data_after_drop['Inicio de Ruta Promedio_dt'] = pd.to_datetime(all_data_after_drop['Inicio de Ruta Promedio'], format='%H:%M:%S').dt.time
-all_data_after_drop['Final de Ruta Promedio_dt'] = pd.to_datetime(all_data_after_drop['Final de Ruta Promedio'], format='%H:%M:%S').dt.time
-
-# Create dummy datetime objects for plotting the time of day
-# We'll use the date from the data and combine it with the average time of day
-# This is necessary because Plotly needs a datetime object for the y-axis to display time correctly
-all_data_after_drop['Inicio de Ruta Promedio_plot'] = pd.to_datetime(all_data_after_drop['Fecha'].astype(str) + ' ' + all_data_after_drop['Inicio de Ruta Promedio_dt'].astype(str))
-all_data_after_drop['Final de Ruta Promedio_plot'] = pd.to_datetime(all_data_after_drop['Fecha'].astype(str) + ' ' + all_data_after_drop['Final de Ruta Promedio_dt'].astype(str))
+# We need a common date for all times to plot them on a time axis
+# We'll use a dummy date like '1900-01-01'
+dummy_date = '1900-01-01'
+average_start_times_dt = pd.to_datetime(dummy_date + ' ' + average_start_times_str, format='%Y-%m-%d %H:%M:%S').dt.time
+average_end_times_dt = pd.to_datetime(dummy_date + ' ' + average_end_times_str, format='%Y-%m-%d %H:%M:%S').dt.time
 
 
-# Group by Fecha and calculate the average of the 'Inicio de Ruta Promedio_plot' and 'Final de Ruta Promedio_plot' for each date
-# We need to do this because we want one line per date showing the average start and end time across trucks for that date
-daily_average_times = all_data_after_drop.groupby('Fecha').agg({
-    'Inicio de Ruta Promedio_plot': 'mean',
-    'Final de Ruta Promedio_plot': 'mean'
-}).reset_index()
+# Create a DataFrame for plotting
+plot_data = pd.DataFrame({
+    'Nombre Archivo': average_start_times_dt.index,
+    'Inicio de Ruta Promedio': average_start_times_dt,
+    'Final de Ruta Promedio': average_end_times_dt
+})
 
-# The result of the 'mean' on datetime objects will be timestamps.
-# We need to convert these timestamps back to datetime objects for plotting.
-# The timestamp represents nanoseconds since the epoch, so divide by 1e9 to get seconds
-daily_average_times['Inicio de Ruta Promedio_plot'] = pd.to_datetime(daily_average_times['Inicio de Ruta Promedio_plot'])
-daily_average_times['Final de Ruta Promedio_plot'] = pd.to_datetime(daily_average_times['Final de Ruta Promedio_plot'])
+# Sort by 'Nombre Archivo' to ensure consistent plotting order if needed
+plot_data = plot_data.sort_values('Nombre Archivo')
 
+# Create the Plotly figure
+fig = go.Figure()
 
-# Melt the dataframe to have 'Fecha', 'Metric', and 'Time' columns for plotting
-melted_daily_average_times = daily_average_times.melt(
-    id_vars='Fecha',
-    value_vars=['Inicio de Ruta Promedio_plot', 'Final de Ruta Promedio_plot'],
-    var_name='Metric',
-    value_name='Time'
-)
+# Add lines for average start time
+fig.add_trace(go.Scatter(
+    x=plot_data['Nombre Archivo'],
+    y=plot_data['Inicio de Ruta Promedio'],
+    mode='lines+markers',
+    name='Inicio de Ruta Promedio'
+))
 
-# Create the line chart using Plotly Express
-fig = px.line(
-    melted_daily_average_times,
-    x='Fecha',
-    y='Time',
-    color='Metric',
-    title='Promedio de Inicio y Final de Ruta por Fecha',
-    labels={'Fecha': 'Fecha', 'Time': 'Hora del Día'}
-)
+# Add lines for average end time
+fig.add_trace(go.Scatter(
+    x=plot_data['Nombre Archivo'],
+    y=plot_data['Final de Ruta Promedio'],
+    mode='lines+markers',
+    name='Final de Ruta Promedio'
+))
 
-# Customize the y-axis to show time in 24-hour format
+# Update layout for better readability
 fig.update_layout(
+    title='Promedio de Inicio y Fin de Ruta por Camión',
+    xaxis_title='Camión',
+    yaxis_title='Hora del Día',
     yaxis=dict(
-        tickformat='%H:%M',  # Format to display time in 24-hour format (HH:MM)
-    )
+        tickmode='array',
+        tickvals=[f'{h:02}:00:00' for h in range(24)],
+        ticktext=[f'{h:02}:00' for h in range(24)],
+        range=['2025-01-01 00:00', '2025-01-01 23:59'] # Set the range for 24 hours
+    ),
+    legend_title='Tipo de Tiempo'
 )
 
-# Display the plot in Streamlit
+# Display the Plotly figure in Streamlit
 st.plotly_chart(fig)
