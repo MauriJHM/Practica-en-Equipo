@@ -165,3 +165,38 @@ all_data_after_drop['Estatus'] = 'Conductores'
 # Display the dataframe after replacing values in 'Estatus'
 st.write("Combined Data after replacing 'Estatus' with 'Conductores':")
 st.dataframe(all_data_after_drop)
+
+ prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit
+
+import plotly.express as px
+
+# Ensure 'Fecha' is in datetime format for plotting
+all_data_after_drop['Fecha'] = pd.to_datetime(all_data_after_drop['Fecha'])
+
+# Convert 'Inicio de Ruta Promedio' and 'Final de Ruta Promedio' from string 'HH:MM:SS' to datetime for plotting
+# We can create a dummy date and combine it with the time string to create datetime objects
+# A simple way is to use the date from the 'Fecha' column
+# Note: This assumes the time string represents the time on that specific 'Fecha'.
+# If the time can span midnight, this approach needs adjustment.
+all_data_after_drop['Inicio de Ruta Promedio Datetime'] = pd.to_datetime(all_data_after_drop['Fecha'].astype(str) + ' ' + all_data_after_drop['Inicio de Ruta Promedio'], errors='coerce')
+all_data_after_drop['Final de Ruta Promedio Datetime'] = pd.to_datetime(all_data_after_drop['Fecha'].astype(str) + ' ' + all_data_after_drop['Final de Ruta Promedio'], errors='coerce')
+
+# Create the line plot
+fig = px.line(
+    all_data_after_drop.groupby(['Fecha', 'Nombre Archivo'])[['Inicio de Ruta Promedio Datetime', 'Final de Ruta Promedio Datetime']].first().reset_index(),
+    x="Fecha",
+    y=["Inicio de Ruta Promedio Datetime", "Final de Ruta Promedio Datetime"],
+    color='Nombre Archivo', # To distinguish lines for each truck
+    title="Inicio y Final de Ruta Promedio por Fecha y Camión"
+)
+
+# Customize the layout if needed
+fig.update_layout(
+    xaxis_title="Fecha",
+    yaxis_title="Hora Promedio",
+    legend_title="Camión"
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig)
+
