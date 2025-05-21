@@ -253,19 +253,26 @@ st.altair_chart(final_pie_chart, use_container_width=True)
 
 # prompt: realiza un histograma de la diferencia entre la hora de inicio y la hora final para streamlit
 
-# Calculate the difference between end and start times for each day and truck
-daily_time_difference = daily_end_times - daily_start_times
+# Calculate the difference between 'Final de Ruta Promedio_dt' and 'Inicio de Ruta Promedio_dt'
+# This will be a Timedelta object
+data_2025['Duracion Ruta Promedio'] = data_2025['Final de Ruta Promedio_dt'] - data_2025['Inicio de Ruta Promedio_dt']
 
-# Convert the time difference to minutes for the histogram
-daily_time_difference_minutes = daily_time_difference.dt.total_seconds() / 60
+# Convert the Timedelta to total minutes or hours for the histogram
+# Let's use total hours for better readability in the histogram
+data_2025['Duracion Ruta Promedio (horas)'] = data_2025['Duracion Ruta Promedio'].dt.total_seconds() / 3600
 
-# Create a histogram of the time differences
-hist_time_difference = alt.Chart(daily_time_difference_minutes.reset_index(name='Diferencia_Minutos')).mark_bar().encode(
-    alt.X("Diferencia_Minutos:Q", bin=True, title="Diferencia de Tiempo en Minutos"),
-    alt.Y("count()", title="Frecuencia")
+# Create the histogram
+chart_duracion = alt.Chart(data_2025).mark_bar().encode(
+    alt.X("Duracion Ruta Promedio (horas):Q", bin=True, title="Duración de Ruta Promedio (horas)"),
+    alt.Y("count()", title="Frecuencia"),
+    tooltip=[
+        alt.Tooltip("Duracion Ruta Promedio (horas)", bin=True, title="Rango de Duración (horas)"),
+        "count()"
+        ]
 ).properties(
-    title="Distribución de la Diferencia entre Hora Final e Inicial de Ruta"
+    title='Distribución de la Duración Promedio de Ruta (en horas)'
 )
 
 # Display the histogram in Streamlit
-st.altair_chart(hist_time_difference, use_container_width=True)
+st.altair_chart(chart_duracion, use_container_width=True)
+
