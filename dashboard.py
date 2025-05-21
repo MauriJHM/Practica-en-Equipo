@@ -166,7 +166,7 @@ all_data_after_drop['Estatus'] = 'Conductores'
 st.write("Combined Data after replacing 'Estatus' with 'Conductores':")
 st.dataframe(all_data_after_drop)
 
- prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit
+#prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit
 
 import plotly.express as px
 
