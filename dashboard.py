@@ -166,48 +166,46 @@ all_data_after_drop['Estatus'] = 'Conductores'
 st.write("Combined Data after replacing 'Estatus' with 'Conductores':")
 st.dataframe(all_data_after_drop)
 
-# prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit y como eje y las horas del dia de 00:00 a 23:59 del año 2025 y si hay valores nulos, ignoralos
+# prompt: haz una grafica de lineas usando la columna Inicio de Ruta Promedio y Final de Ruta Promedio usando como eje x la columna Fecha para streamlit y como eje y las horas del dia de 00:00 a 23:59 del año 2025 y si hay valores nulos, ignoralos, segmentando cada camion con su propio concepto
 
-import plotly.express as px
+import altair as alt
+import pandas as pd
 
-# Ensure 'Fecha' column is datetime objects
-all_data_after_drop['Fecha'] = pd.to_datetime(all_data_after_drop['Fecha'])
+# Ensure 'Fecha_Hora' is datetime and extract date
+all_data_after_drop['Fecha_Hora'] = pd.to_datetime(all_data_after_drop['Fecha_Hora'])
+all_data_after_drop['Fecha'] = all_data_after_drop['Fecha_Hora'].dt.date
 
-# Filter data for the year 2025
-df_2025 = all_data_after_drop[all_data_after_drop['Fecha'].dt.year == 2025].copy()
-
-# Drop rows with null values in the relevant columns
-df_2025.dropna(subset=['Fecha', 'Inicio de Ruta Promedio', 'Final de Ruta Promedio'], inplace=True)
-
-# Convert 'Inicio de Ruta Promedio' and 'Final de Ruta Promedio' strings to datetime objects
-# We need to combine them with a dummy date to create datetime objects for plotting
+# Convert average time strings to datetime objects (using a dummy date)
 dummy_date = pd.to_datetime('2025-01-01')
-df_2025['Inicio de Ruta Promedio Datetime'] = pd.to_datetime(dummy_date.strftime('%Y-%m-%d') + ' ' + df_2025['Inicio de Ruta Promedio'])
-df_2025['Final de Ruta Promedio Datetime'] = pd.to_datetime(dummy_date.strftime('%Y-%m-%d') + ' ' + df_2025['Final de Ruta Promedio'])
+all_data_after_drop['Inicio de Ruta Promedio_dt'] = pd.to_datetime(dummy_date.strftime('%Y-%m-%d') + ' ' + all_data_after_drop['Inicio de Ruta Promedio'], errors='coerce')
+all_data_after_drop['Final de Ruta Promedio_dt'] = pd.to_datetime(dummy_date.strftime('%Y-%m-%d') + ' ' + all_data_after_drop['Final de Ruta Promedio'], errors='coerce')
 
-# Create the line chart
-fig = px.line(
-    df_2025,
-    x='Fecha',
-    y=['Inicio de Ruta Promedio Datetime', 'Final de Ruta Promedio Datetime'],
-    title='Promedio de Inicio y Final de Ruta por Día (2025)',
-    labels={
-        'Fecha': 'Fecha',
-        'value': 'Hora del Día',
-        'variable': 'Tipo de Ruta'
-    }
+# Filter for the year 2025
+data_2025 = all_data_after_drop[all_data_after_drop['Fecha_Hora'].dt.year == 2025].copy()
+
+# Drop rows with NaN values in the relevant columns
+data_2025.dropna(subset=['Inicio de Ruta Promedio_dt', 'Final de Ruta Promedio_dt', 'Fecha', 'Nombre Archivo'], inplace=True)
+
+# Create the line chart for 'Inicio de Ruta Promedio'
+chart_inicio = alt.Chart(data_2025).mark_line().encode(
+    x=alt.X('Fecha:T', title='Fecha'),
+    y=alt.Y('hours(Inicio de Ruta Promedio_dt):Q', title='Hora del Día (00:00 - 23:59)', axis=alt.Axis(format='%H:%M')),
+    color='Nombre Archivo:N',
+    tooltip=['Fecha:T', 'Inicio de Ruta Promedio:N', 'Nombre Archivo:N']
+).properties(
+    title='Inicio de Ruta Promedio por Camión en 2025'
 )
 
-# Customize the y-axis to show hours from 00:00 to 23:59
-fig.update_layout(
-    yaxis=dict(
-        tickformat='%H:%M',
-        range=[
-            pd.to_datetime(dummy_date.strftime('%Y-%m-%d') + ' 00:00').timestamp() * 1000,
-            pd.to_datetime(dummy_date.strftime('%Y-%m-%d') + ' 23:59').timestamp() * 1000
-        ]
-    )
+# Create the line chart for 'Final de Ruta Promedio'
+chart_final = alt.Chart(data_2025).mark_line().encode(
+    x=alt.X('Fecha:T', title='Fecha'),
+    y=alt.Y('hours(Final de Ruta Promedio_dt):Q', title='Hora del Día (00:00 - 23:59)', axis=alt.Axis(format='%H:%M')),
+    color='Nombre Archivo:N',
+    tooltip=['Fecha:T', 'Final de Ruta Promedio:N', 'Nombre Archivo:N']
+).properties(
+    title='Final de Ruta Promedio por Camión en 2025'
 )
 
-# Display the plot in Streamlit
-st.plotly_chart(fig)
+# Display the charts in Streamlit
+st.altair_chart(chart_inicio, use_container_width=True)
+st.altair_chart(chart_final, use_container_width=True)
