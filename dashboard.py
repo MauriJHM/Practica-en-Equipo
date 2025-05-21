@@ -251,3 +251,21 @@ final_pie_chart = pie_chart + text
 # Display the pie chart in Streamlit
 st.altair_chart(final_pie_chart, use_container_width=True)
 
+# prompt: realiza un histograma de la diferencia entre la hora de inicio y la hora final para streamlit
+
+# Calculate the difference between end and start times for each day and truck
+daily_time_difference = daily_end_times - daily_start_times
+
+# Convert the time difference to minutes for the histogram
+daily_time_difference_minutes = daily_time_difference.dt.total_seconds() / 60
+
+# Create a histogram of the time differences
+hist_time_difference = alt.Chart(daily_time_difference_minutes.reset_index(name='Diferencia_Minutos')).mark_bar().encode(
+    alt.X("Diferencia_Minutos:Q", bin=True, title="Diferencia de Tiempo en Minutos"),
+    alt.Y("count()", title="Frecuencia")
+).properties(
+    title="Distribución de la Diferencia entre Hora Final e Inicial de Ruta"
+)
+
+# Display the histogram in Streamlit
+st.altair_chart(hist_time_difference, use_container_width=True)
