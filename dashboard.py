@@ -195,102 +195,38 @@ fig.update_layout(
 # Display the plot
 st.plotly_chart(fig)
 
-# prompt: en la columna Estatus cambia los nombres y reemplazalos por Conductor 1 y Conductor 2 respectivamente por cada camion
+# prompt: de la columna Estatus reemplaza los nombres de conductores con conductor 1 y conductor 2 respectivamente en CAMION M01, CAMION M02,CAMION M03,CAMION M04,CAMION M05,CAMION M06,CAMION M07,CAMION M08,CAMION M09,CAMION M10,CAMION M11,CAMION M12
 
-# Replace the values in the 'Estatus' column
-# We need to iterate through the dataframes in the dictionary 'dfs'
-# or if you want to apply it to the combined dataframe, use all_data_after_drop
-# Let's apply it to the combined dataframe 'all_data_after_drop' as it seems more likely this is the goal
-# based on the subsequent plotting code.
+# Identify unique drivers in the 'Estatus' column for the specified trucks
+truck_names = [f'CAMION M{i:02d}' for i in range(1, 13)]
+drivers_to_replace = set()
 
-# Map original values to new values
-# Assuming 'Conductor 1' and 'Conductor 2' are the specific names you want to replace with.
-# You might need to identify which original names correspond to which new names.
-# For example, if the original names are 'OriginalName1' and 'OriginalName2'
-# replacement_map = {'OriginalName1': 'Conductor 1', 'OriginalName2': 'Conductor 2'}
+for df_name in truck_names:
+  if df_name in dfs and 'Estatus' in dfs[df_name].columns:
+    # Find unique non-numeric values in the 'Estatus' column
+    non_numeric_estatus = dfs[df_name]['Estatus'][pd.to_numeric(dfs[df_name]['Estatus'], errors='coerce').isna()]
+    drivers_to_replace.update(non_numeric_estatus.unique())
 
-# Since the request is to replace existing names by 'Conductor 1' and 'Conductor 2'
-# respectively for *each truck*, it implies there are likely two primary status values per truck
-# that need renaming. Without knowing the original values, we'll assume they are
-# consistent across trucks or you intend to replace *all* values in 'Estatus'
-# with 'Conductor 1' and 'Conductor 2' in some pattern.
+# Convert the set of drivers to a sorted list to ensure consistent mapping
+drivers_to_replace_list = sorted(list(drivers_to_replace))
 
-# A common scenario might be replacing the first occurrence (or a specific value)
-# with 'Conductor 1' and the second (or another specific value) with 'Conductor 2'.
-# If there are only two distinct status values per truck, you could map them.
+# Create a mapping from driver names to 'conductor 1', 'conductor 2', etc.
+driver_mapping = {driver: f'conductor {i+1}' for i, driver in enumerate(drivers_to_replace_list)}
 
-# Example: If the original values are 'Driver A' and 'Driver B'
-# replacement_map = {'Driver A': 'Conductor 1', 'Driver B': 'Conductor 2'}
-# all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].replace(replacement_map)
+# Apply the mapping to the 'Estatus' column for the specified trucks
+for df_name in truck_names:
+  if df_name in dfs and 'Estatus' in dfs[df_name].columns:
+    # Use .loc to avoid SettingWithCopyWarning
+    dfs[df_name].loc[:, 'Estatus'] = dfs[df_name]['Estatus'].replace(driver_mapping)
+    st.write(f"Replaced driver names in 'Estatus' column for {df_name}")
 
-# If the goal is simpler and you just want to rename existing values to these two,
-# you need to know what the original values are. Let's assume you have identified
-# the two main statuses you want to rename, for example 'Active' and 'Inactive'.
-# replacement_map = {'Active': 'Conductor 1', 'Inactive': 'Conductor 2'}
-# all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].replace(replacement_map)
+# Display the dataframes after replacement
+for df_name in truck_names:
+  if df_name in dfs and 'Estatus' in dfs[df_name].columns:
+    st.write(f"Contents of {df_name}.xlsx after replacing driver names:")
+    st.dataframe(dfs[df_name])
 
-# If the requirement is to assign 'Conductor 1' and 'Conductor 2' based on some other logic,
-# or if the existing 'Estatus' values are the actual names that need changing,
-# please clarify the exact mapping or logic.
-
-# As a general example, if you want to replace all instances of a specific value:
-# all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].replace('Existing_Status_1', 'Conductor 1')
-# all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].replace('Existing_Status_2', 'Conductor 2')
-
-# If the intention is to *categorize* entries within each truck's data
-# and assign 'Conductor 1' or 'Conductor 2' based on that categorization,
-# you would need logic to define which entries get which conductor.
-
-# Assuming you want to replace existing distinct values in 'Estatus' with 'Conductor 1' and 'Conductor 2'.
-# Let's find the unique values in the 'Estatus' column to see what needs replacing.
-unique_statuses = all_data_after_drop['Estatus'].unique()
-st.write("Unique statuses before replacement:", unique_statuses)
-
-# You need to define the mapping based on the `unique_statuses`.
-# For demonstration, let's assume the first unique status found will be replaced by 'Conductor 1'
-# and the second by 'Conductor 2', if there are at least two unique statuses.
-if len(unique_statuses) >= 2:
-    replacement_map = {unique_statuses[0]: 'Conductor 1', unique_statuses[1]: 'Conductor 2'}
-    all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].replace(replacement_map)
-    st.write(f"Replaced {unique_statuses[0]} with Conductor 1 and {unique_statuses[1]} with Conductor 2")
-elif len(unique_statuses) == 1:
-    # If there's only one unique status, you might replace it with 'Conductor 1'
-    replacement_map = {unique_statuses[0]: 'Conductor 1'}
-    all_data_after_drop['Estatus'] = all_data_after_drop['Estatus'].replace(replacement_map)
-    st.write(f"Replaced {unique_statuses[0]} with Conductor 1 (only one unique status found)")
-else:
-    st.write("No unique statuses found in the 'Estatus' column.")
-
-
-# Display the dataframe after the replacement
-st.write("Combined Data after replacing 'Estatus' values:")
-st.dataframe(all_data_after_drop)
-
-# If the replacement needs to happen *per truck* and the status values
-# to be replaced are different for each truck, you would need to iterate
-# through the individual dataframes in the `dfs` dictionary.
-# For example:
-# for df_name, df in dfs.items():
-#     # Identify the specific status values to replace for this truck (df_name)
-#     # This logic would depend on how you identify which values correspond to 'Conductor 1' and 'Conductor 2'
-#     # within this specific truck's data.
-#     # Example: Assuming for CAMION M01, you replace 'Driver_A_M01' with 'Conductor 1' and 'Driver_B_M01' with 'Conductor 2'
-#     if df_name == 'CAMION M01':
-#         truck_replacement_map = {'Driver_A_M01': 'Conductor 1', 'Driver_B_M01': 'Conductor 2'}
-#     elif df_name == 'CAMION M02':
-#         truck_replacement_map = {'Driver_C_M02': 'Conductor 1', 'Driver_D_M02': 'Conductor 2'}
-#     # ... add conditions for other trucks
-#     else:
-#         truck_replacement_map = {} # No specific replacement for this truck
-
-#     if truck_replacement_map:
-#         dfs[df_name]['Estatus'] = dfs[df_name]['Estatus'].replace(truck_replacement_map)
-#         st.write(f"Replaced statuses in {df_name} based on truck-specific map.")
-#     else:
-#         st.write(f"No specific status replacement defined for {df_name}.")
-
-# After modifying individual dataframes in `dfs`, you would then re-concatenate them:
-# all_data_after_drop = pd.concat(dfs.values(), ignore_index=True)
-# st.write("Combined Data after replacing 'Estatus' values (per truck):")
-# st.dataframe(all_data_after_drop)
-# Then continue with the plotting code using this new `all_data_after_drop`
+# Re-concatenate the dataframes if needed after replacement
+all_data_after_replacement = pd.concat([dfs[df_name] for df_name in truck_names if df_name in dfs], ignore_index=True)
+st.write("Combined Data from specified trucks after replacing driver names:")
+st.dataframe(all_data_after_replacement)
