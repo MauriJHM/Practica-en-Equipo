@@ -276,3 +276,58 @@ chart_duracion = alt.Chart(data_2025).mark_bar().encode(
 # Display the histogram in Streamlit
 st.altair_chart(chart_duracion, use_container_width=True)
 
+# prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no
+
+# Calculate the number of distinct dates in 2025 for each truck
+total_potential_days_2025 = data_2025.groupby('Nombre Archivo')['Fecha'].nunique()
+
+# Calculate the number of actual attendance days for each truck
+actual_attendance_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique()
+
+# Calculate the number of absent days
+absent_days = total_potential_days_2025 - actual_attendance_days
+
+# Prepare data for the pie chart
+pie_chart_data = pd.DataFrame({
+    'Nombre Archivo': actual_attendance_days.index,
+    'Dias Asistidos': actual_attendance_days.values,
+    'Dias Faltantes': absent_days.values
+})
+
+# Reshape the data for Altair (long format is preferred for charting)
+pie_chart_melted = pie_chart_data.melt(
+    id_vars='Nombre Archivo',
+    value_vars=['Dias Asistidos', 'Dias Faltantes'],
+    var_name='Estatus',
+    value_name='Cantidad de Días'
+)
+
+# Create the pie chart
+# We will create a separate pie chart for each truck
+trucks = pie_chart_melted['Nombre Archivo'].unique()
+
+for truck in trucks:
+    truck_data = pie_chart_melted[pie_chart_melted['Nombre Archivo'] == truck]
+
+    base = alt.Chart(truck_data).encode(
+        theta=alt.Theta("Cantidad de Días", stack=True)
+    )
+
+    pie = base.mark_arc(outerRadius=120).encode(
+        color=alt.Color("Estatus"),
+        order=alt.Order("Estatus"),
+        tooltip=["Estatus", "Cantidad de Días"]
+    )
+
+    text = base.mark_text(radius=140).encode(
+        text=alt.Text("Cantidad de Días"),
+        order=alt.Order("Estatus"),
+        color=alt.value("black")  # Set the color of the labels to black
+    )
+
+    chart = (pie + text).properties(
+        title=f'Distribución de Asistencia para {truck}'
+    )
+
+    st.altair_chart(chart, use_container_width=True)
+
