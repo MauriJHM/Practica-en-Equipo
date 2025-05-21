@@ -195,39 +195,10 @@ fig.update_layout(
 # Display the plot
 st.plotly_chart(fig)
 
-# prompt: de la columna Estatus reemplaza los nombres de conductores con conductor 1 y conductor 2 individualmente para las filas CAMION M01, CAMION M02, CAMION M03 , CAMION M04 , CAMION M05 , CAMION M06 , CAMION M07 , CAMION M08 , CAMION M09 , CAMION M10 , CAMION M11 , CAMION M12
+# prompt: en la columna Estatus reemplaza los nombres con Conductores
 
-# Replace driver names in the 'Estatus' column
-truck_names = [
-    'CAMION M01', 'CAMION M02', 'CAMION M03', 'CAMION M04', 'CAMION M05',
-    'CAMION M06', 'CAMION M07', 'CAMION M08', 'CAMION M09', 'CAMION M10',
-    'CAMION M11', 'CAMION M12'
-]
+all_data_after_drop['Estatus'] = 'Conductores'
 
-for truck in truck_names:
-  if truck in dfs:
-    df = dfs[truck]
-    # Assuming the driver names you want to replace are specific strings.
-    # You need to know the actual driver names to replace them.
-    # Replace 'DriverName1' with 'Conductor 1'
-    df['Estatus'] = df['Estatus'].replace('Nombre Conductor 1', 'Conductor 1')
-    # Replace 'DriverName2' with 'Conductor 2'
-    df['Estatus'] = df['Estatus'].replace('Nombre Conductor 2', 'Conductor 2')
-    # You can add more replace calls if there are other driver names
-    st.write(f"Replaced driver names in 'Estatus' for {truck}")
-  else:
-    st.warning(f"DataFrame for {truck} not found in dfs dictionary.")
-
-# After replacing, you might want to re-concatenate the dataframes if needed
-all_data_after_replacement = pd.concat(dfs.values(), ignore_index=True)
-st.write("Combined Data after replacing driver names in 'Estatus':")
-st.dataframe(all_data_after_replacement)
-
-# Update all_data_after_drop if that's the DataFrame you're working with downstream
-# This assumes you want the replacements to be reflected in the combined dataframe used for subsequent calculations
-all_data_after_drop['Estatus'] = all_data_after_drop.apply(
-    lambda row: dfs[row['Nombre Archivo']].loc[dfs[row['Nombre Archivo']].index[dfs[row['Nombre Archivo']]['Fecha_Hora'] == row['Fecha_Hora']].tolist()[0], 'Estatus']
-    if row['Nombre Archivo'] in dfs and not dfs[row['Nombre Archivo']].loc[dfs[row['Nombre Archivo']]['Fecha_Hora'] == row['Fecha_Hora']].empty else row['Estatus'], axis=1
-)
-st.write("Combined Data (all_data_after_drop) updated with replaced driver names:")
+# Display the dataframe after replacing values in 'Estatus'
+st.write("Combined Data after replacing 'Estatus' with 'Conductores':")
 st.dataframe(all_data_after_drop)
