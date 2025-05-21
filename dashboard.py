@@ -276,28 +276,39 @@ chart_duracion = alt.Chart(data_2025).mark_bar().encode(
 # Display the histogram in Streamlit
 st.altair_chart(chart_duracion, use_container_width=True)
 
-# prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no
+ prompt: en base a los dias faltantes genera una grafica de pastel contando los dias que si se asistio contra los dias que no solo tomandolo base a un mes de 31 dias
 
-# Calculate the number of distinct dates in 2025 for each truck
-total_scheduled_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique().reset_index(name='Dias Asistidos')
+# Calculate the number of unique days attended per truck in 2025
+attended_days = data_2025.groupby('Nombre Archivo')['Fecha'].nunique().reset_index(name='Dias Asistidos')
 
-# Assuming 365 days in 2025
-days_in_2025 = 365
-total_scheduled_days['Dias Faltantes'] = days_in_2025 - total_scheduled_days['Dias Asistidos']
+# Define the total days in a month
+total_days_in_month = 31
 
-# Melt the DataFrame for the pie chart
-pie_data = total_scheduled_days.melt(id_vars='Nombre Archivo', value_vars=['Dias Asistidos', 'Dias Faltantes'], var_name='Tipo de Día', value_name='Cantidad de Días')
+# Calculate the number of absent days
+attended_days['Dias Faltantes'] = total_days_in_month - attended_days['Dias Asistidos']
+
+# Reshape the data for the pie chart (long format)
+pie_data = attended_days.melt(id_vars='Nombre Archivo', value_vars=['Dias Asistidos', 'Dias Faltantes'],
+                               var_name='Estado', value_name='Cantidad de Días')
 
 # Create the pie chart
-pie_chart = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
+chart_pie_attendance = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
     theta=alt.Theta(field="Cantidad de Días", type="quantitative"),
-    color=alt.Color(field="Tipo de Día", type="nominal"),
-    tooltip=["Nombre Archivo", "Tipo de Día", "Cantidad de Días"]
+    color=alt.Color(field="Estado", type="nominal"),
+    tooltip=["Nombre Archivo", "Estado", "Cantidad de Días"]
 ).properties(
-    title='Distribución de Días Asistidos vs. Días Faltantes por Camión (2025)'
-).facet(
-    column=alt.Column('Nombre Archivo', header=alt.Header(titleOrient="bottom", labelOrient="bottom"))
+    title='Distribución de Días Asistidos vs. Días Faltantes por Camión (Base 31 días)'
 )
 
-# Display the pie chart
-st.altair_chart(pie_chart, use_container_width=True)
+# Add text labels to the pie chart
+text = chart_pie_attendance.mark_text(radius=140).encode(
+    text=alt.Text("Cantidad de Días", format=".1f"),
+    order=alt.Order("Estado"),
+    color=alt.value("black")
+)
+
+# Combine the pie chart and the text
+final_chart_pie = chart_pie_attendance + text
+
+# Display the pie chart in Streamlit
+st.altair_chart(final_chart_pie, use_container_width=True)
