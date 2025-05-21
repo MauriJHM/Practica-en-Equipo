@@ -209,3 +209,45 @@ chart_final = alt.Chart(data_2025).mark_line().encode(
 # Display the charts in Streamlit
 st.altair_chart(chart_inicio, use_container_width=True)
 st.altair_chart(chart_final, use_container_width=True)
+
+# prompt: realiza una grafica de pastel de la diferencia entre la hora de inicio y la hora final para streamlit
+
+# Calculate the difference in time for each truck
+# We can calculate the difference in seconds and then convert to a more readable format if needed
+average_start_times_seconds = all_data_after_drop.groupby('Nombre Archivo')['Inicio de Ruta Promedio_dt'].min().apply(lambda x: x.timestamp()) # Use min as all rows for a truck will have the same value after merge
+average_end_times_seconds = all_data_after_drop.groupby('Nombre Archivo')['Final de Ruta Promedio_dt'].min().apply(lambda x: x.timestamp()) # Use min as all rows for a truck will have the same value after merge
+
+time_difference_seconds = average_end_times_seconds - average_start_times_seconds
+
+# Convert time difference in seconds to hours for easier interpretation in a pie chart
+time_difference_hours = time_difference_seconds / 3600
+
+# Create a DataFrame for the pie chart
+pie_data = pd.DataFrame({
+    'Nombre Archivo': time_difference_hours.index,
+    'Duración de Ruta (Horas)': time_difference_hours.values
+})
+
+# Create the pie chart using Altair
+pie_chart = alt.Chart(pie_data).mark_arc(outerRadius=120).encode(
+    theta=alt.Theta(field="Duración de Ruta (Horas)", type="quantitative"),
+    color=alt.Color(field="Nombre Archivo", type="nominal"),
+    order=alt.Order(field="Duración de Ruta (Horas)", sort="descending"),
+    tooltip=["Nombre Archivo", "Duración de Ruta (Horas)"]
+).properties(
+    title='Distribución de la Duración Promedio de Ruta por Camión'
+)
+
+# Add text labels to the pie chart
+text = pie_chart.mark_text(radius=140).encode(
+    text=alt.Text(field="Duración de Ruta (Horas)", type="quantitative", format='.1f'),
+    order=alt.Order(field="Duración de Ruta (Horas)", sort="descending"),
+    color=alt.value("black")  # Set the color of the labels to black
+)
+
+# Combine the pie chart and the text
+final_pie_chart = pie_chart + text
+
+# Display the pie chart in Streamlit
+st.altair_chart(final_pie_chart, use_container_width=True)
+
