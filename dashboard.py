@@ -157,49 +157,6 @@ all_data_after_drop = pd.merge(all_data_after_drop, average_end_times_df, on='No
 st.write("Combined Data with 'Final de Ruta Promedio' column:")
 st.dataframe(all_data_after_drop)
 
-# prompt: Usando la columna de inicio de ruta promedio y final de ruta promedio junto con la columna Fecha_Hora haz una grafica de lineas
-
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-# Convert 'Inicio de Ruta Promedio' and 'Final de Ruta Promedio' to datetime objects
-# We'll use a dummy date since we only care about the time part for plotting time of day
-dummy_date = pd.to_datetime('2000-01-01')
-
-all_data_after_drop['Inicio de Ruta Promedio_dt'] = pd.to_datetime(dummy_date.date().astype(str) + ' ' + all_data_after_drop['Inicio de Ruta Promedio'], errors='coerce')
-all_data_after_drop['Final de Ruta Promedio_dt'] = pd.to_datetime(dummy_date.date().astype(str) + ' ' + all_data_after_drop['Final de Ruta Promedio'], errors='coerce')
-
-# Ensure 'Fecha_Hora' is a datetime object
-all_data_after_drop['Fecha_Hora'] = pd.to_datetime(all_data_after_drop['Fecha_Hora'], errors='coerce')
-
-# Create the line plot
-plt.figure(figsize=(15, 7))
-
-# Sort the data by Fecha_Hora for a proper line plot
-all_data_after_drop_sorted = all_data_after_drop.sort_values(by='Fecha_Hora')
-
-# Plot 'Inicio de Ruta Promedio'
-plt.plot(all_data_after_drop_sorted['Fecha_Hora'], all_data_after_drop_sorted['Inicio de Ruta Promedio_dt'].dt.time, label='Inicio de Ruta Promedio')
-
-# Plot 'Final de Ruta Promedio'
-plt.plot(all_data_after_drop_sorted['Fecha_Hora'], all_data_after_drop_sorted['Final de Ruta Promedio_dt'].dt.time, label='Final de Ruta Promedio')
-
-plt.xlabel('Fecha y Hora')
-plt.ylabel('Hora del Día Promedio')
-plt.title('Inicio y Final de Ruta Promedio a lo largo del Tiempo')
-plt.legend()
-plt.grid(True)
-
-# Format the x-axis to show dates
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
-plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
-plt.gcf().autofmt_xdate() # Auto-rotate date labels
-
-# Format the y-axis to show time
-plt.gca().yaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-
-plt.tight_layout()
-plt.show()
 
 # prompt: en la columna Estatus reemplaza los nombres con Conductores
 
